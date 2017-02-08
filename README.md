@@ -1,4 +1,4 @@
-## Welcome to (PS)²DAq
+# Welcome to (PS)²DAq
 
 This stand for : Python Serial Power Supply Data Acquisition
 Demonstration : 
@@ -7,6 +7,10 @@ P(ython) S(erial) P(ower) S(upply) D(ata) A(c)q(uisition) = PSPSDAq
 
 
 Need the following stuff : 
-# Python 3.4.x
-# PySerial
-# Matplotlib
+
+- Python 3.4.x
+
+- PySerial
+
+- Matplotlib
+
