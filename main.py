@@ -38,7 +38,6 @@ def connect_serial_port():
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
-        writeButton.config(state="normal")
 
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
         thread = Thread(target=read, args=(1, thread_stop))  # defines a new thread for every connection
@@ -95,8 +94,8 @@ def read(arg, stop_event):
 
         # FIRST ask for the measurements :
         if ser:
-            ser.write("MEAsure:ARRay?")
-        
+            ser.write("MEAsure:ARRay?".encode())
+            #print("Asked measures")
         try:
             l = []  # Contains all the letters received for serial port
             try:
@@ -121,13 +120,14 @@ def read(arg, stop_event):
 
             # The word has such a structure :
             # 30.99 V, 0.000 A, 0 W
+            #print("Recieved : " + word)
             for w in word.split(", "):
-                if w.endswith("S="):  # Found the S value,
+                if w.endswith(" V"):  # Found the S value,
                     # put it into the S label
                     volpowValue.set(w.replace(" V", ""))
-                elif w.startswith(" A"):  # Found the S value, put it into the S label
+                elif w.endswith(" A"):  # Found the S value, put it into the S label
                     currValue.set(w.replace(" A", ""))
-                elif w.startswith(" W"):  # Found the y2 value, put it into the y2 label
+                elif w.endswith(" W"):  # Found the y2 value, put it into the y2 label
                     powValue.set(w.replace(" W", ""))
                 else:
                     # this happens when we connect or disconnect to serial port
