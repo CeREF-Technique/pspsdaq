@@ -91,26 +91,42 @@ def start_mesure():
     """
     global flagStartStop
     global thread
-    
-    if flagStartStop:
-        thread_stop.set() # Stop the read thread
-        startStopButton.config(text="Start")
-        flagStartStop = False
-        sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
-        timeUnitCombobox.config(state="normal")
-    else:
-        if not thread_stop.isSet():
-            thread.start()  # Launch the read thread
-        else:
-            thread_stop.clear()
-            thread = Thread(target=read, args=(1, thread_stop))
-            thread.start()  # Launch the read thread
-            
-        startStopButton.config(text="Stop")
-        flagStartStop = True
 
-        sampleTimeEntryBox.config(state="disabled")
-        timeUnitCombobox.config(state="disabled")
+    if len(sampleEntry.get()) != 0:
+        sampleEntry.set(sampleEntry.get().replace(",","."))
+        if isfloat(sampleEntry.get()):
+            sampleTime = float(sampleEntry.get())
+            #Convert the sampletime setted into seconds
+            if timeUnitCombobox.get() == "minute(s)":
+                sampleTime*=60
+            elif timeUnitCombobox.get() == "hour(s)":
+                sampleTime*=3600
+            # Else it is seconds, so no need to convert
+                
+            if sampleTime > 0:
+                if flagStartStop:
+                    thread_stop.set() # Stop the read thread
+                    startStopButton.config(text="Start")
+                    flagStartStop = False
+                    sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
+                    timeUnitCombobox.config(state="normal")
+                else:
+                    if not thread_stop.isSet():
+                        thread.start()  # Launch the read thread
+                    else:
+                        thread_stop.clear()
+                        thread = Thread(target=read, args=(sampleTime, thread_stop))
+                        thread.start()  # Launch the read thread
+                        
+                    startStopButton.config(text="Stop")
+                    flagStartStop = True
+
+                    sampleTimeEntryBox.config(state="disabled")
+                    timeUnitCombobox.config(state="disabled")
+            else:
+                sampleEntry.set("1")
+        else:
+            sampleEntry.set("")
 
 def read(arg, stop_event):
     """
@@ -167,6 +183,7 @@ def read(arg, stop_event):
             # exit the main while if there is an exception (like port not open)
             print("Read Broke down")
             break
+        time.sleep(arg)
 
 
 def isfloat(strin):
