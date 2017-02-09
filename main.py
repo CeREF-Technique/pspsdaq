@@ -7,6 +7,7 @@ import glob
 import struct
 import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
+import csv
 
 __author__ = 'Maxim Dumortier'
 """
@@ -16,6 +17,7 @@ __author__ = 'Maxim Dumortier'
 The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
 At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
 """
+
 
 #
 # FUNCTIONS :
@@ -41,8 +43,7 @@ def connect_serial_port():
         startStopButton.config(state="normal")
         
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
-        thread = Thread(target=read, args=(1, thread_stop))  # defines a new thread for every connection
-        #thread.start()  # Launch the read thread
+        
 
 
 def disconnect_serial_port():
@@ -91,16 +92,17 @@ def start_mesure():
     """
     global flagStartStop
     global thread
-
+    global beginTime
+    
     if len(sampleEntry.get()) != 0:
         sampleEntry.set(sampleEntry.get().replace(",","."))
         if isfloat(sampleEntry.get()):
             sampleTime = float(sampleEntry.get())
             #Convert the sampletime setted into seconds
             if timeUnitCombobox.get() == "minute(s)":
-                sampleTime*=60
+                sampleTime *= 60
             elif timeUnitCombobox.get() == "hour(s)":
-                sampleTime*=3600
+                sampleTime *= 3600
             # Else it is seconds, so no need to convert
                 
             if sampleTime > 0:
@@ -112,6 +114,7 @@ def start_mesure():
                     timeUnitCombobox.config(state="normal")
                 else:
                     if not thread_stop.isSet():
+                        thread = Thread(target=read, args=(sampleTime, thread_stop))
                         thread.start()  # Launch the read thread
                     else:
                         thread_stop.clear()
@@ -123,6 +126,7 @@ def start_mesure():
 
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
+                    beginTime = time.time()
             else:
                 sampleEntry.set("1")
         else:
@@ -131,16 +135,21 @@ def start_mesure():
 def read(arg, stop_event):
     """
     Read function, reads continuously the data from serial port
-    :param arg: put some stuff here (like 1)
+    :param arg: sample time
     :param stop_event: An event to stop the thread
     :return: nothing
     """
+    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S") + ".csv"
+    data = [[]] # Format : mesure number, localtime, time since begining (seconds), Volts, Amps, Watts
+    
+    mesure_number = 1 # Initialize de measure number
+    data[0] = ["Measure Number", "Local time", "Relative time(s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
+    
     while not stop_event.is_set():
 
         # FIRST ask for the measurements :
         if ser:
             ser.write("MEAsure:ARRay?".encode())
-            #print("Asked measures")
         try:
             l = []  # Contains all the letters received for serial port
             try:
@@ -166,24 +175,33 @@ def read(arg, stop_event):
             # The word has such a structure :
             # 30.99 V, 0.000 A, 0 W
             #print("Recieved : " + word)
+            currentTime = time.time()
             for w in word.split(", "):
-                if w.endswith(" V"):  # Found the S value,
-                    # put it into the S label
+                if w.endswith(" V"):
                     volpowValue.set(w.replace(" V", ""))
-                elif w.endswith(" A"):  # Found the S value, put it into the S label
+                elif w.endswith(" A"):
                     currValue.set(w.replace(" A", ""))
-                elif w.endswith(" W"):  # Found the y2 value, put it into the y2 label
+                elif w.endswith(" W"):
                     powValue.set(w.replace(" W", ""))
                 else:
-                    # this happens when we connect or disconnect to serial port
+                    # This happens when we connect or disconnect to serial port
                     print("Houston, we've got a problem: unable to recognize " + w + " in received string")
                     pass
-
+            deltaTime = '%.1f' % round(currentTime-beginTime, 1)
+            data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
+            mesure_number += 1
         except serial.SerialException:
             # exit the main while if there is an exception (like port not open)
             print("Read Broke down")
             break
+         
         time.sleep(arg)
+        
+    # Write the csv file at the end of the thread
+    with open(fileName, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            for line in data:
+                writer.writerow(line)
 
 
 def isfloat(strin):
