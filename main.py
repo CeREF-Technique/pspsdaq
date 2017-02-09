@@ -6,7 +6,7 @@ import sys
 import glob
 import struct
 import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
-
+import time
 
 __author__ = 'Maxim Dumortier'
 """
@@ -38,10 +38,11 @@ def connect_serial_port():
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
-
+        startStopButton.config(state="normal")
+        
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
         thread = Thread(target=read, args=(1, thread_stop))  # defines a new thread for every connection
-        thread.start()  # Launch the read thread
+        #thread.start()  # Launch the read thread
 
 
 def disconnect_serial_port():
@@ -56,7 +57,7 @@ def disconnect_serial_port():
             connectButton.config(state="normal")
             disconnectButton.config(state="disabled")
             portComboBox.config(state="normal")
-            writeButton.config(state="disabled")
+            startStopButton.config(state="disabled")
         except:
             pass
         ser.close()
@@ -82,6 +83,34 @@ def goodbye():
     # destroy the window
     root.destroy()
 
+
+flagStartStop = False # Flag for the Start/Stop button
+def start_mesure():
+    """
+    Start measuring
+    """
+    global flagStartStop
+    global thread
+    
+    if flagStartStop:
+        thread_stop.set() # Stop the read thread
+        startStopButton.config(text="Start")
+        flagStartStop = False
+        sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
+        timeUnitCombobox.config(state="normal")
+    else:
+        if not thread_stop.isSet():
+            thread.start()  # Launch the read thread
+        else:
+            thread_stop.clear()
+            thread = Thread(target=read, args=(1, thread_stop))
+            thread.start()  # Launch the read thread
+            
+        startStopButton.config(text="Stop")
+        flagStartStop = True
+
+        sampleTimeEntryBox.config(state="disabled")
+        timeUnitCombobox.config(state="disabled")
 
 def read(arg, stop_event):
     """
@@ -219,6 +248,8 @@ timeUnitCombobox["values"] = ["second(s)","minute(s)","hour(s)"]
 timeUnitChoice.set("minute(s)")
 timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 
+startStopButton = tk.Button(root, text="Start Measure", command=start_mesure, state="disabled")
+startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
 # Current sensor value
 tk.Label(root, text="Voltage").grid(column=0, row=3, padx=5, pady=5)
