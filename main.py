@@ -5,7 +5,7 @@ import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
 import struct
-import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
+#import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
 import csv
 
@@ -223,7 +223,7 @@ def isfloat(strin):
 
 root = tk.Tk()  # create a new window
 root.geometry("800x600")  # set the size of the window
-root.title("Power Supply Sniffer")  # set a title to the window
+root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
 tk.Label(root, text="Software to read and monitor data of a power supply through USB-serial port")\
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
 

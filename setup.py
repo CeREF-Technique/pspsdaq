@@ -22,7 +22,7 @@ setup(
 
     version="0.1b",
 
-    description="Graphical interface to communicate with a power supply in order to acquire some data",
+    description="Python Serial Power Supply Data Acquisition - (PS)²DAq ; Graphical interface to communicate with a power supply in order to acquire some data",
 
     options={"build_exe": build_exe_options},
 
