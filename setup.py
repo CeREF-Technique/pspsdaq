@@ -18,13 +18,13 @@ if sys.platform.startswith('win'):
 icon = "icon.ico"  # Desktop icon
 
 setup(
-    name="(PS)²DAq",
+    name = "(PS)²DAq",
 
-    version="0.1b",
+    version = "0.1b",
 
-    description="Python Serial Power Supply Data Acquisition - (PS)²DAq ; Graphical interface to communicate with a power supply in order to acquire some data",
+    description = "Python Serial Power Supply Data Acquisition - (PS)²DAq ; Graphical interface to communicate with a power supply in order to acquire some data",
 
-    options={"build_exe": build_exe_options},
+    options = {"build_exe": build_exe_options},
 
     executables=[Executable("main.py", base=base, shortcutName="(PS)²DAq", shortcutDir="DesktopFolder",
                             icon=icon)],
