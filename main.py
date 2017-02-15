@@ -7,7 +7,8 @@ import glob
 import struct
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
-import csv
+import sys
+from exportData import Export
 
 __author__ = 'Maxim Dumortier'
 """
@@ -139,11 +140,11 @@ def read(arg, stop_event):
     :param stop_event: An event to stop the thread
     :return: nothing
     """
-    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S") + ".csv"
-    data = [[]] # Format : mesure number, localtime, time since begining (seconds), Volts, Amps, Watts
+    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+    dataFile = Export(fileName, header=["Measure Number", "Local time", "Relative time(s)", "Voltage (V)", "Current (A)", "Power (W)"])
+    #data = [[]] # Format : mesure number, localtime, time since begining (seconds), Volts, Amps, Watts
     
     mesure_number = 1 # Initialize de measure number
-    data[0] = ["Measure Number", "Local time", "Relative time(s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
     
     while not stop_event.is_set():
 
@@ -188,7 +189,8 @@ def read(arg, stop_event):
                     print("Houston, we've got a problem: unable to recognize " + w + " in received string")
                     pass
             deltaTime = '%.1f' % round(currentTime-beginTime, 1)
-            data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
+            #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
+            dataFile.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
             mesure_number += 1
         except serial.SerialException:
             # exit the main while if there is an exception (like port not open)

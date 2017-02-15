@@ -17,6 +17,8 @@ Need the following stuff :
 
 - Matplotlib
 
+- openpyxls
+
 - Freeze (Optional)
 
 

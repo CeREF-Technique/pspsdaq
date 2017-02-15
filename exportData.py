@@ -6,8 +6,7 @@
  This class is used to export the data in the wanted way
  Available : 
   - CSV
-  - Xlsx ? TODO
-  - odt ? TODO
+  - XLSX
   - XML ? TODO
 
 """
