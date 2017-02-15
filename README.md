@@ -5,7 +5,7 @@
 Demonstration : 
 
 
-P_ython_ S_erial_ P_ower_ S_upply_ D_ata_ A_c_q_uisition_ = PSPSDAq
+**P**ython **S**erial **P**ower **S**upply **D**ata **A**c**q**uisition = PSPSDAq
 = (PS).(PS).(DAq) = (PS)²DAq
 
 
