@@ -8,6 +8,7 @@ import struct
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
 from exportData import Export
+import logging
 
 __author__ = 'Maxim Dumortier'
 """
@@ -30,7 +31,7 @@ def connect_serial_port():
     :return: nothing
     """
     if portChoice.get():
-        print("Connection with " + portChoice.get())
+        logging.info("Connection with %s", portChoice.get())
         # some variables must be global (to be used in disconnection function)
         global ser
         global thread_stop
@@ -63,6 +64,7 @@ def disconnect_serial_port():
             pass
         ser.close()
         thread_stop.clear()
+        logging.info("disconnected from serial port")
 
 
 def goodbye():
@@ -83,6 +85,7 @@ def goodbye():
         pass
     # destroy the window
     root.destroy()
+    logging.info("Window was closed brutally")
 
 
 flagStartStop = False # Flag for the Start/Stop button
@@ -96,6 +99,7 @@ def start_mesure():
     
     if len(sampleEntry.get()) != 0:
         sampleEntry.set(sampleEntry.get().replace(",","."))
+        
         if isfloat(sampleEntry.get()):
             sampleTime = float(sampleEntry.get())
             #Convert the sampletime setted into seconds
@@ -106,12 +110,14 @@ def start_mesure():
             # Else it is seconds, so no need to convert
                 
             if sampleTime > 0:
+                
                 if flagStartStop:
                     thread_stop.set() # Stop the read thread
                     startStopButton.config(text="Start")
                     flagStartStop = False
                     sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
                     timeUnitCombobox.config(state="normal")
+                    logging.info("Stopped measurement")
                 else:
                     if not thread_stop.isSet():
                         thread = Thread(target=read, args=(sampleTime, thread_stop))
@@ -127,6 +133,11 @@ def start_mesure():
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
                     beginTime = time.time()
+                    logging.info("Started measurement with %d sec. as sample time", sampleTime)
+                    
+            elif sampleTime == 0:
+                # TODO : make a case that take samples as fast as possible
+                sampleEntry.set("1")
             else:
                 sampleEntry.set("1")
         else:
@@ -151,6 +162,7 @@ def read(arg, stop_event):
         # FIRST ask for the measurements :
         if ser:
             ser.write("MEAsure:ARRay?".encode())
+            logging.debug("Sended serial request")
         try:
             l = []  # Contains all the letters received for serial port
             try:
@@ -177,6 +189,7 @@ def read(arg, stop_event):
             # 30.99 V, 0.000 A, 0 W
             #print("Recieved : " + word)
             currentTime = time.time()
+            logging.debug("Recieved serial response : %s", word)
             for w in word.split(", "):
                 if w.endswith(" V"):
                     volpowValue.set(w.replace(" V", ""))
@@ -186,7 +199,7 @@ def read(arg, stop_event):
                     powValue.set(w.replace(" W", ""))
                 else:
                     # This happens when we connect or disconnect to serial port
-                    print("Houston, we've got a problem: unable to recognize " + w + " in received string")
+                    logging.error("Houston, we've got a problem: unable to recognize " + w + " in received string")
                     pass
             deltaTime = '%.1f' % round(currentTime-beginTime, 1)
             #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
@@ -194,7 +207,7 @@ def read(arg, stop_event):
             mesure_number += 1
         except serial.SerialException:
             # exit the main while if there is an exception (like port not open)
-            print("Read Broke down")
+            logging.error("Read Broke down")
             break
          
         time.sleep(arg)
@@ -223,6 +236,9 @@ def isfloat(strin):
 # MAIN routine :
 #
 
+logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%(message)s', level=logging.DEBUG)
+logging.info("Application Starded")
+
 root = tk.Tk()  # create a new window
 root.geometry("800x600")  # set the size of the window
 root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
@@ -238,7 +254,10 @@ elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
 elif sys.platform.startswith('darwin'):
     ports = glob.glob('/dev/tty.*')
 else:
+    logging.exception(EnvironmentError('Unsupported platform'))
     raise EnvironmentError('Unsupported platform')
+
+
 
 # Test each available port to check if there is some response
 result = []
@@ -250,6 +269,7 @@ for port in ports:
     except (OSError, serial.SerialException):
         pass
 
+
 connectButton = tk.Button(root, text="Connect...", command=connect_serial_port)
 connectButton.grid(column=1, row=1, padx=5, pady=5)
 
@@ -259,6 +279,10 @@ portComboBox = ttk.Combobox(root, textvariable=portChoice)
 if not result:
     result.append("No Serial Port Available")
     connectButton.config(state="disabled")
+    logging.info("No Serial Port Available")
+else:
+    logging.debug("Found Serialports : %s", result)
+    
 portComboBox["values"] = result  # Set the list of the serial ports
 if result:
     portComboBox.current(0)  # default select the first on of the list
