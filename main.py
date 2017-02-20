@@ -36,8 +36,8 @@ def connect_serial_port():
         global ser
         global thread_stop
         global thread
-        ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
-        ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
+        ser = serial.Serial(portChoice.get(), 9600, serial.EIGHTBITS, serial.PARITY_ODD, serial.STOPBITS_ONE, timeout=1)  # serial port
+        #ser.setBaudrate(9600)  # Baudrate must be the same as the device
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
@@ -107,24 +107,22 @@ def start_mesure():
             # Else it is seconds, so no need to convert
                 
             if sampleTime > 0:
-                if flagStartStop:
+                if flagStartStop: # Case that the thread is currently running and we want to stop it
                     thread_stop.set() # Stop the read thread
                     startStopButton.config(text="Start")
                     flagStartStop = False
                     sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
                     timeUnitCombobox.config(state="normal")
-                else:
-                    if not thread_stop.isSet():
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
-                    else:
+                    
+                else: # Case that we want to launch the reading thread
+                    if thread_stop.isSet():
                         thread_stop.clear()
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
                         
-                    startStopButton.config(text="Stop")
+                    thread = Thread(target=read, args=(sampleTime, thread_stop))
+                    thread.start()  # Launch the read thread
+                        
                     flagStartStop = True
-
+                    startStopButton.config(text="Stop")
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
                     beginTime = time.time()
@@ -150,17 +148,21 @@ def read(arg, stop_event):
 
         # FIRST ask for the measurements :
         if ser:
-            ser.write("MEAsure:ARRay?".encode())
+            print(bytearray([13, 0, 2, 0, 17]))
+            ser.write(b'\x75\x00\x47\x00\xBC')#"MEAsure:ARRay?".encode())
         try:
             l = []  # Contains all the letters received for serial port
             try:
                 while ser:
-                    r = ser.read(1).decode("ascii")
-                    if r != "\n":  # look after the last char
+                    r = ser.read(1)
+                    print(r)
+                    #r = ser.read(1).decode("ascii")
+                    if r != b'': #"\n":  # look after the last char
                         l.append(r)
                     else:
                         break
                 word = ''.join(l)  # copy the char table into a string word
+                print(word)
             except UnicodeDecodeError:
                 try:
                     while ser:
