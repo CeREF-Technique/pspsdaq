@@ -9,8 +9,10 @@ import struct
 import time
 from exportData import Export
 import logging
+import PSI_5080_10A
 
 __author__ = 'Maxim Dumortier'
+
 """
  Feb. 2017
  CERISIC, Mons, BELGIUM
