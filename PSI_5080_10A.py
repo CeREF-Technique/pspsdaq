@@ -5,6 +5,16 @@
 import powerSupply
 
 class PSI508010A(powerSupply.PowerSupply):
+
+    def __init__(self, serial_name):
+        self.name = "EA PSI-5080-10A"
+        
+        self.port = serial_name
+        self.baudrate = 9600                 # Default baud rate
+        self.timeout = 1                     # Default timeout, seconds
+        self.parity = serial.PARITY_NONE     # Default parity
+        self.stopbits = serial.STOPBITS_ONE  # Default stop bits
+        self.bytesize = serial.EIGHTBITS
     
     def getVoltage(self):
         GET_VOLTAGE_COMMAND = "MEASure:VOLTage?".encode() # command to send to the power supply to get the current voltage

@@ -7,7 +7,7 @@ More info about the serial API : https://pythonhosted.org/pyserial/pyserial_api.
 """
 import serial
 
-class PowerSupply(serial.Serial):
+class PowerSupply():
     """ Power Supply class extends directly the Serial class
         This make things much easier
     """
@@ -20,6 +20,7 @@ class PowerSupply(serial.Serial):
             Each children an here define non-default values for his specific case
             Input : serial_name, String, is the serial port name (e.g. COM2)
         """
+        self.name = "Generic Power Supply"
         self.port = serial_name
 
         self.baudrate = 9600                 # Default baud rate
@@ -44,6 +45,11 @@ class PowerSupply(serial.Serial):
         """ Possible bytesizes :
             FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS
         """
+        self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
+
+        self.max_voltage = 0.0 # Volts
+        self.max_current = 0.0 # Amps
+        self.max_power   = 0.0 # Watts
 
     
     def getVoltage(self):
@@ -58,9 +64,43 @@ class PowerSupply(serial.Serial):
         """
         return 0.0
 
+
     def getPower(self):
         """ Generic method to get the current power in the power supply
             If there is no specific command for getting power consuption, then juste get Voltage and Current and multiply them together
             return : float, in Watts
         """
         return 0.0
+
+
+    def getMeasures(self):
+        """ Generic method to get the all the measures of the power supply
+            If there is no specific command for getting power consuption, then juste get Voltage and Current and multiply them together
+            return : tuple of float : voltage, current, power
+        """
+        return 0.0, 0.0, 0.0
+
+
+    def setRemoteControlOn(self, switch):
+        """ Set the Remote Control of power supplies
+            Enable the ability to set other values
+            Input : Boolean value, True to set ON, False to set OFF
+        """ 
+
+            
+    def setPowerSupplyOn(self, switch):
+        """ Set the output of power supplie On or Off
+            Input : Boolean value, True to set ON, False to set OFF
+        """ 
+        
+
+    def setVoltage(self, volts):
+        """ Set the output voltage to power supply
+            Input : float volts, value to be set
+        """ 
+
+
+    def setCurrent(self, amps):
+        """ Set the output current to power supply
+            Input : float amps, value to be set
+        """ 

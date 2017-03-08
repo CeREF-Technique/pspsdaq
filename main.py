@@ -213,12 +213,6 @@ def read(arg, stop_event):
             break
          
         time.sleep(arg)
-        
-    # Write the csv file at the end of the thread
-    """with open(fileName, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=';')
-            for line in data:
-                writer.writerow(line)"""
 
 
 def isfloat(strin):
