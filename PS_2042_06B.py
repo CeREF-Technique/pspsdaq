@@ -1,5 +1,5 @@
 """ Maxim Dumortier
-    March. 2017
+    March 2017
     Class for a special type of Power supply
 """
 import powerSupply

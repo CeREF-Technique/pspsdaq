@@ -10,6 +10,7 @@ import time
 from exportData import Export
 import logging
 import PSI_5080_10A
+import PS_2042_06B
 
 __author__ = 'Maxim Dumortier'
 
