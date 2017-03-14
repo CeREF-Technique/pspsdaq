@@ -2,7 +2,7 @@
     Feb. - March 2017
     Class for a special type of Power supply
 """
-import powerSupply
+from . import powerSupply
 import serial
 
 class PSI508010A(powerSupply.PowerSupply):

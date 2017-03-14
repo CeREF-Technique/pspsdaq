@@ -1,7 +1,7 @@
 from threading import Thread, Event
 import tkinter as tk  # graphical interface
 from tkinter import ttk
-import serial  # install pySerial lib first in cmd : pip install pyserial
+#import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
 import struct
@@ -9,13 +9,12 @@ import struct
 import time
 from exportData import Export
 import logging
-import PSI_5080_10A
-import PS_2042_06B
+from PS import *
 
 __author__ = 'Maxim Dumortier'
 
 """
- Feb. 2017
+ Feb. - March 2017
  CERISIC, Mons, BELGIUM
 
 The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
@@ -36,11 +35,12 @@ def connect_serial_port():
     if portChoice.get():
         logging.info("Connection with %s", portChoice.get())
         # some variables must be global (to be used in disconnection function)
-        global ser
+        global ps # power supply
         global thread_stop
         global thread
-        ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
-        ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
+        #ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
+        #ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
+        ps = PS204206B(portChoice.get())
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
@@ -55,8 +55,8 @@ def disconnect_serial_port():
     Close the current serial connection
     :return: nothing
     """
-    if ser:
-        print("Disconnection from " + ser.name)
+    if ps.ser:
+        print("Disconnection from " + ps.ser.name)
         thread_stop.set()  # stop reading Thread
         try:  # if the buttons are always available, put them into the initial state
             connectButton.config(state="normal")
@@ -65,7 +65,7 @@ def disconnect_serial_port():
             startStopButton.config(state="disabled")
         except:
             pass
-        ser.close()
+        ps.ser.close()
         thread_stop.clear()
         logging.info("disconnected from serial port")
 
@@ -81,8 +81,8 @@ def goodbye():
         pass
 
     try:
-        if ser:
-            ser.close()
+        if ps.ser:
+            ps.ser.close()
             # disconnectPortSerial()  # disconnect port
     except NameError:  # case of the names are not defined yet
         pass
@@ -163,50 +163,16 @@ def read(arg, stop_event):
     while not stop_event.is_set():
 
         # FIRST ask for the measurements :
-        if ser:
-            ser.write("MEAsure:ARRay?".encode())
-            logging.debug("Sended serial request")
-        try:
-            l = []  # Contains all the letters received for serial port
-            try:
-                while ser:
-                    r = ser.read(1).decode("ascii")
-                    if r != "\n":  # look after the last char
-                        l.append(r)
-                    else:
-                        break
-                word = ''.join(l)  # copy the char table into a string word
-            except UnicodeDecodeError:
-                try:
-                    while ser:
-                        r = ser.read(1).decode("utf-8")
-                        if r != "\n":  # look after the last char
-                            l.append(chr(r))
-                        else:
-                            break
-                    word = ''.join(l)  # copy the char table into a string word
-                except UnicodeDecodeError:
-                    pass
-
-            # The word has such a structure :
-            # 30.99 V, 0.000 A, 0 W
-            #print("Recieved : " + word)
-            currentTime = time.time()
-            logging.debug("Recieved serial response : %s", word)
-            for w in word.split(", "):
-                if w.endswith(" V"):
-                    volpowValue.set(w.replace(" V", ""))
-                elif w.endswith(" A"):
-                    currValue.set(w.replace(" A", ""))
-                elif w.endswith(" W"):
-                    powValue.set(w.replace(" W", ""))
-                else:
-                    # This happens when we connect or disconnect to serial port
-                    logging.error("Houston, we've got a problem: unable to recognize " + w + " in received string")
-                    pass
+        if ps.ser:
+            volt,current,power = ps.getMeasures()
+            print(volt,current,power)
+            voltValue.set(volt)
+            currValue.set(current)
+            powValue.set(power)
+            
             deltaTime = '%.1f' % round(currentTime-beginTime, 1)
-            #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
-            exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(volpowValue.get()), float(currValue.get()), float(powValue.get())])
+            #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), voltValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
+            exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
             mesure_number += 1
         except serial.SerialException:
             # exit the main while if there is an exception (like port not open)
@@ -311,10 +277,10 @@ startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
 # Current sensor value
 tk.Label(root, text="Voltage").grid(column=0, row=3, padx=5, pady=5)
-volpowValue = tk.StringVar()
-tk.Label(root, textvariable=volpowValue, relief=tk.SOLID).grid(column=1, row=3, padx=5, pady=5,
+voltValue = tk.StringVar()
+tk.Label(root, textvariable=voltValue, relief=tk.SOLID).grid(column=1, row=3, padx=5, pady=5,
                                                           sticky=tk.N + tk.E + tk.S + tk.W)
-volpowValue.set("###")
+voltValue.set("###")
 tk.Label(root, text="V").grid(column=2, row=3, padx=5, pady=5)
 
 # Current temperature value
