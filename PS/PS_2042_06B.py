@@ -6,8 +6,11 @@ from . import powerSupply
 import serial
 
 class PS204206B(powerSupply.PowerSupply):
+    """ NB : The power supply must be ON before you plug the USB cable ...
+    """
 
     def __init__(self, serial_name):
+        self.__name__ = "PS204106B"
         self.name = "EA PS-2042-06B"
         
         self.port = serial_name
@@ -64,7 +67,7 @@ class PS204206B(powerSupply.PowerSupply):
                 CS += d
                 toreturn += bytes([d])
         toreturn += bytes([CS >> 8])
-        toreturn += bytes([CS & 0xFF])  
+        toreturn += bytes([CS & 0xFF])
         return toreturn
 
 
@@ -151,7 +154,6 @@ class PS204206B(powerSupply.PowerSupply):
         MASK_TRANSMISSION = 0xC0 # 1100 0000 look only the 2 last bits
         NEEDED_ANSWER_TRANSMISSION = 0x80 # 1000 0000 two last bits must be "10"
 
-        
         SD = recieved[0]
         if SD & MASK_LENGTH != NEEDED_LENGTH:
             print("BAD length for the concerned answer")
@@ -222,7 +224,9 @@ class PS204206B(powerSupply.PowerSupply):
         try:
             while self.ser:
                 r = self.ser.read(1)
-
+                #while self.ser.inWaiting() > 0:
+                 #   print( self.ser.read(1))
+                #print(r)
                 if r != endByte:  # look after the last char
                     l.append(int.from_bytes(r, byteorder='big'))
                 else:

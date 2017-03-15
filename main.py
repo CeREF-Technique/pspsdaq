@@ -1,7 +1,7 @@
 from threading import Thread, Event
 import tkinter as tk  # graphical interface
 from tkinter import ttk
-#import serial  # install pySerial lib first in cmd : pip install pyserial
+import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
 import struct
@@ -40,7 +40,7 @@ def connect_serial_port():
         global thread
         #ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
         #ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
-        ps = PS204206B(portChoice.get())
+        ps = PS_2042_06B.PS204206B(portChoice.get())
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
@@ -164,17 +164,17 @@ def read(arg, stop_event):
 
         # FIRST ask for the measurements :
         if ps.ser:
+            currentTime = time.time()
             volt,current,power = ps.getMeasures()
-            print(volt,current,power)
-            voltValue.set(volt)
-            currValue.set(current)
-            powValue.set(power)
+            voltValue.set("%.2f" % volt)
+            currValue.set("%.2f" % current)
+            powValue.set("%.2f" % power)
             
             deltaTime = '%.1f' % round(currentTime-beginTime, 1)
             #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), voltValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
             exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
             mesure_number += 1
-        except serial.SerialException:
+        else:
             # exit the main while if there is an exception (like port not open)
             logging.error("Read Broke down")
             break
