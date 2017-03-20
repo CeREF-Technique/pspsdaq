@@ -57,7 +57,7 @@ class PSI508010A(powerSupply.PowerSupply):
         """
         self.ser.write(command)
 
-    def getID():
+    def getID(self):
         """ Genereic method to get the id of the device
             return : String, the ID
         """

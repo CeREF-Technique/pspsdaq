@@ -44,10 +44,11 @@ def connect_serial_port():
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
         startStopButton.config(state="normal")
+        deviceID.set("Serial number : " + ps.getID())
+        logging.info("Connected to de device " + deviceID.get())
         
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
         
-
 
 def disconnect_serial_port():
     """
@@ -55,7 +56,8 @@ def disconnect_serial_port():
     :return: nothing
     """
     if ps.ser:
-        print("Disconnection from " + ps.ser.name)
+        #print("Disconnection from " + ps.ser.name)
+        logging.info("Disconnection from " + ps.ser.name)
         thread_stop.set()  # stop reading Thread
         try:  # if the buttons are always available, put them into the initial state
             connectButton.config(state="normal")
@@ -194,6 +196,7 @@ def isfloat(strin):
     except ValueError:
         return False
 
+
 #
 # MAIN routine :
 #
@@ -206,7 +209,8 @@ root.geometry("800x600")  # set the size of the window
 root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
 tk.Label(root, text="Software to read and monitor data of a power supply through USB-serial port")\
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
-root.iconbitmap(default=ICON_PATH)
+root.iconbitmap(default=ICON_PATH) # set the beatiful icon on the app
+
 
 # Get the list of all the available ports in a  system (win, linux, cygwin or darwin)
 if sys.platform.startswith('win'):
@@ -219,7 +223,6 @@ elif sys.platform.startswith('darwin'):
 else:
     logging.exception(EnvironmentError('Unsupported platform'))
     raise EnvironmentError('Unsupported platform')
-
 
 
 # Test each available port to check if there is some response
@@ -254,15 +257,18 @@ portComboBox.grid(column=0,row=1, padx=5, pady=5)  # set the combobox at the rig
 
 disconnectButton = tk.Button(root, text="Disconnect...", state="disabled", command=disconnect_serial_port)
 disconnectButton.grid(column=2, row=1, padx=5, pady=5)
+deviceID = tk.StringVar()
+deviceID.set("")
+tk.Label(root,textvariable=deviceID).grid(column=3, row=1, padx=5, pady=5)
 
 
 #
 # Labels with stringVar, their names and their units
 #
-def hello():
+"""def hello():
     print ("hello!")
     
-"""menubar = tk.Menu(root)
+menubar = tk.Menu(root)
 menubar.add_command(label="Hello!", command=hello)
 menubar.add_command(label="Quit!", command=root.exit)
 root.config(menu=menubar)"""

@@ -17,3 +17,5 @@ develop-eggs/
 .installed.cfg
 *.log
 icons/
+*.xlsx
+*.csv

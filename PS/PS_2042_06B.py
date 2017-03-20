@@ -152,47 +152,49 @@ class PS204206B(powerSupply.PowerSupply):
         
         MASK_TRANSMISSION = 0xC0 # 1100 0000 look only the 2 last bits
         NEEDED_ANSWER_TRANSMISSION = 0x80 # 1000 0000 two last bits must be "10"
+        if len(recieved)>0:
+            SD = recieved[0]
+            if SD & MASK_LENGTH != NEEDED_LENGTH:
+                print("BAD length for the concerned answer")
+                length = (SD & MASK_LENGTH)
 
-        SD = recieved[0]
-        if SD & MASK_LENGTH != NEEDED_LENGTH:
-            print("BAD length for the concerned answer")
-            length = (SD & MASK_LENGTH) + 1
+            if SD & MASK_SENDER != NEEDED_SENDER:
+                print("This message was sent from the PC to the device and is thus not an answer")
 
-        if SD & MASK_SENDER != NEEDED_SENDER:
-            print("This message was sent from the PC to the device and is thus not an answer")
+            if SD & MASK_CAST != NEEDED_CAST:
+                print("Message was not send with the right cast")
 
-        if SD & MASK_CAST != NEEDED_CAST:
-            print("Message was not send with the right cast")
+            if SD & MASK_TRANSMISSION != NEEDED_ANSWER_TRANSMISSION:
+                print("Message recieved is not an answer")
+                
 
-        if SD & MASK_TRANSMISSION != NEEDED_ANSWER_TRANSMISSION:
-            print("Message recieved is not an answer")
-            
+            DN = recieved[1]
+            if DN != 0x00:
+                print("Device node must be 0 in Serial")
 
-        DN = recieved[1]
-        if DN != 0x00:
-            print("Device node must be 0 in Serial")
-
-            
-        OBJ = recieved[2]
-        if(OBJ != command):
-            print("ERROR, not same object")
+                
+            OBJ = recieved[2]
+            if(OBJ != command):
+                print("ERROR, not same object")
 
 
-        DATA = recieved[3: 3 + length]
-        CS0 = recieved[-2]
-        CS1 = recieved[-1]
+            DATA = recieved[3: 3 + length]
+            CS0 = recieved[-2]
+            CS1 = recieved[-1]
 
-        # No data field here, it's a query
-        CS = OBJ + SD + DN 
-        for data in DATA:
-            CS += data # Add each byte to the calculated check sum
-        if (CS & 0xFF) != CS1:
-            print("Check sum error")
-        elif (CS >> 8) != CS0:
-            print("Check sum error")
-        #else:
-         #   print("Check sum OK")
-
+            # No data field here, it's a query
+            CS = OBJ + SD + DN 
+            for data in DATA:
+                CS += data # Add each byte to the calculated check sum
+            if (CS & 0xFF) != CS1:
+                print("Check sum error")
+            elif (CS >> 8) != CS0:
+                print("Check sum error")
+            #else:
+             #   print("Check sum OK")
+        else:
+            print("Nothing to read")
+            DATA = b''
         return DATA
 
     
@@ -245,18 +247,15 @@ class PS204206B(powerSupply.PowerSupply):
         """
         self.ser.write(self.constructRequestWithData(command, length, data=value))
 
-    def getID():
+    def getID(self):
         """ Genereic method to get the id of the device
             return : String, the ID
         """
         GET_ID_COMMAND = 0x01 # Object to be get
-        GET_ID_LENGHT = 2 # lenght of the response in bytes
+        GET_ID_LENGHT = 16 # lenght of the response in bytes
         
-        DATA_Bytes = self.getData(GET_VALUES_COMMAND, GET_VALUES_LENGHT)
-        toreturn=""
-        for b in DATA_Bytes:
-            toreturn.join(b)
-        return toreturn
+        DATA_Bytes = self.getData(GET_ID_COMMAND, GET_ID_LENGHT)
+        return DATA_Bytes.decode()
     
     def getVoltage(self):
         """ Get the voltage of the power supply
@@ -287,9 +286,14 @@ class PS204206B(powerSupply.PowerSupply):
         GET_VALUES_LENGHT = 6 # lenght of the response in bytes
         
         DATA_Bytes = self.getData(GET_VALUES_COMMAND, GET_VALUES_LENGHT)
-        volt = self.getFloatValue(DATA_Bytes[2:4], self.max_voltage)
-        curr = self.getFloatValue(DATA_Bytes[4:6], self.max_current)
-        power = volt * curr
+        if DATA_Bytes != b'':
+            volt = self.getFloatValue(DATA_Bytes[2:4], self.max_voltage)
+            curr = self.getFloatValue(DATA_Bytes[4:6], self.max_current)
+            power = volt * curr
+        else:
+            volt = -1.0
+            curr = -1.0
+            power = -1.0
         return volt, curr, power
 
 
