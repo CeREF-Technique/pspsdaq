@@ -17,7 +17,7 @@ base = None
 if sys.platform.startswith('win'):
     base = "Win32GUI"
 
-icon = "PS2DAq.ico"  # Desktop icon
+icon = "./res/PS2DAq.ico"  # Desktop icon
 
 setup(
     name = "(PS)²DAq",

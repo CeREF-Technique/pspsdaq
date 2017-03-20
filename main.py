@@ -4,7 +4,7 @@ from tkinter import ttk
 import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
-import struct
+#import struct
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
 from exportData import Export
@@ -21,6 +21,7 @@ The Goal of this code is to talk with a Power supply in serial mode (COM port) a
 At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
 """
 
+ICON_PATH = "./res/PS2DAq.ico"
 
 #
 # FUNCTIONS :
@@ -38,8 +39,6 @@ def connect_serial_port():
         global ps # power supply
         global thread_stop
         global thread
-        #ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
-        #ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
         ps = PS_2042_06B.PS204206B(portChoice.get())
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
@@ -207,6 +206,7 @@ root.geometry("800x600")  # set the size of the window
 root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
 tk.Label(root, text="Software to read and monitor data of a power supply through USB-serial port")\
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
+root.iconbitmap(default=ICON_PATH)
 
 # Get the list of all the available ports in a  system (win, linux, cygwin or darwin)
 if sys.platform.startswith('win'):
@@ -259,6 +259,13 @@ disconnectButton.grid(column=2, row=1, padx=5, pady=5)
 #
 # Labels with stringVar, their names and their units
 #
+def hello():
+    print ("hello!")
+    
+"""menubar = tk.Menu(root)
+menubar.add_command(label="Hello!", command=hello)
+menubar.add_command(label="Quit!", command=root.exit)
+root.config(menu=menubar)"""
 
 tk.Label(root, text="Sample Time").grid(column=0, row=2, padx=5, pady=5)
 sampleEntry = tk.StringVar()

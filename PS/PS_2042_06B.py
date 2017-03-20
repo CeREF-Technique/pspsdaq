@@ -10,7 +10,6 @@ class PS204206B(powerSupply.PowerSupply):
     """
 
     def __init__(self, serial_name):
-        self.__name__ = "PS204106B"
         self.name = "EA PS-2042-06B"
         
         self.port = serial_name
@@ -241,27 +240,24 @@ class PS204206B(powerSupply.PowerSupply):
         """ Get the asked data from the power supply through the Serial port
             Input : command = number of the object to be get
                     length = lenght of the data to be get (in bytes)
+                    value = value to be set (lenght must be the same as set)
                     endByte = terminaison byte (to check the end of the transmission) by default is b''
-            Output = Give a byte array of the data answered
         """
         self.ser.write(self.constructRequestWithData(command, length, data=value))
 
-        """ l = bytearray()  # Contains all the letters received for serial port
-        try:
-            while self.ser:
-                r = self.ser.read(1)
-
-                if r != endByte:  # look after the last char
-                    l.append(int.from_bytes(r, byteorder='big'))
-                else:
-                    break
-            print(l)
-        except Exception as e:
-            print("Fail to read")
-            print(e)
-        return self.deconstructAnswer(l, command, length)"""
-
+    def getID():
+        """ Genereic method to get the id of the device
+            return : String, the ID
+        """
+        GET_ID_COMMAND = 0x01 # Object to be get
+        GET_ID_LENGHT = 2 # lenght of the response in bytes
         
+        DATA_Bytes = self.getData(GET_VALUES_COMMAND, GET_VALUES_LENGHT)
+        toreturn=""
+        for b in DATA_Bytes:
+            toreturn.join(b)
+        return toreturn
+    
     def getVoltage(self):
         """ Get the voltage of the power supply
             return : float, in Volts

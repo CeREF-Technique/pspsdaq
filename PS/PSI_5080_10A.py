@@ -57,6 +57,12 @@ class PSI508010A(powerSupply.PowerSupply):
         """
         self.ser.write(command)
 
+    def getID():
+        """ Genereic method to get the id of the device
+            return : String, the ID
+        """
+        GET_ID_COMMAND = "*IDN?".encode() # command to send to the power supply to get the current voltage
+        return self.getData(GET_ID_COMMAND)
     
     def getVoltage(self):
         GET_VOLTAGE_COMMAND = "MEASure:VOLTage?".encode() # command to send to the power supply to get the current voltage
@@ -71,7 +77,7 @@ class PSI508010A(powerSupply.PowerSupply):
         return self.getData(GET_POWER_COMMAND)
 
     def getMeasures(self):
-        GET_VALUES_COMMAND = "".encode()
+        GET_VALUES_COMMAND = "MEASure:ARRay?".encode()
         word = self.getData(GET_VALUES_COMMAND)
         for w in word.split(", "):
             if w.endswith(" V"):
@@ -90,32 +96,28 @@ class PSI508010A(powerSupply.PowerSupply):
             Enable the ability to set other values
             Input : Boolean value, True to set ON, False to set OFF
         """ 
-        if switch:
-            self.setData(0x36, 2, [0x10, 0x10])
-        else:
-            self.setData(0x36, 2, [0x10, 0x00])
+        SET_REMOTE_COMMAND = "".encode()
+        self.writeData(SET_REMOTE_COMMAND)
 
     def setPowerSupplyOn(self, switch):
         """ Set the output of power supplie On or Off
             Input : Boolean value, True to set ON, False to set OFF
         """ 
-        if switch:
-            self.setData(0x36, 2, [0x01, 0x01])
-        else:
-            self.setData(0x36, 2, [0x01, 0x00])
+        SET_PS_ON_COMMAND = "".encode()
+        self.writeData(SET_PS_ON_COMMAND)
 
     def setVoltage(self, volts):
         """ Set the output voltage to power supply
             Input : float volts, value to be set
         """ 
-        val = round(volts / self.max_voltage * 25600)
-        self.setData(0x32, 2, [val>>8, val & 0xFF]) #set voltage % of Unom*256 ==> 10v/42v * 25600 = 6095
+        SET_VOLTAGE_COMMAND = "".encode()
+        self.writeData(SET_VOLTAGE_COMMAND)
 
 
     def setCurrent(self, amps):
         """ Set the output current to power supply
             Input : float amps, value to be set
         """ 
-        val = round(amps / self.max_current * 25600)
-        self.setData(0x33, 2, [val>>8, val & 0xFF])
+        SET_CURRENT_COMMAND = "".encode()
+        self.writeData(SET_CURRENT_COMMAND)
                 

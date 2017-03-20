@@ -11,8 +11,6 @@ class PowerSupply():
     """ Power Supply class extends directly the Serial class
         This make things much easier
     """
-    
-    
 
     
     def __init__(self, serial_name):
@@ -51,6 +49,11 @@ class PowerSupply():
         self.max_current = 0.0 # Amps
         self.max_power   = 0.0 # Watts
 
+    def getID():
+        """ Genereic method to get the id of the device
+            return : String, the ID
+        """
+        return ""
     
     def getVoltage(self):
         """ Generic method to get the current voltage in the power supply
