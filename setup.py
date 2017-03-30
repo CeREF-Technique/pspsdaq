@@ -11,7 +11,7 @@ To execute it, use the Create_exe.bat and Create_msi.bat files.
 """
 
 
-build_exe_options = {"packages": ["os"]}
+build_exe_options = {"packages": ["os", "PS"], "includes" : ["PS"], "include_files":["res"]}
 
 base = None
 if sys.platform.startswith('win'):
