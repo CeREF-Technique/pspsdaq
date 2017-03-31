@@ -7,7 +7,7 @@ More info about the serial API : https://pythonhosted.org/pyserial/pyserial_api.
 """
 import serial
 
-class PowerSupply():
+class PowerSupply(object):
     """ Power Supply class extends directly the Serial class
         This make things much easier
     """

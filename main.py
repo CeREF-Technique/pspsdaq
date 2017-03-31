@@ -9,8 +9,7 @@ import glob
 import time
 from exportData import Export
 import logging
-from PS import *
-
+import PS
 __author__ = 'Maxim Dumortier'
 
 """
@@ -27,7 +26,6 @@ ICON_PATH = "./res/PS2DAq.ico"
 # FUNCTIONS :
 #
 
-
 def connect_serial_port():
     """
     Opens a new serial connection if the port name is right
@@ -39,7 +37,9 @@ def connect_serial_port():
         global ps # power supply
         global thread_stop
         global thread
-        ps = PS_2042_06B.PS204206B(portChoice.get())
+        
+        ps = PS.classDict[psChoice.get()](portChoice.get())
+        
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
@@ -278,6 +278,12 @@ sampleEntry = tk.StringVar()
 sampleTimeEntryBox = tk.Entry(root, textvariable=sampleEntry, relief=tk.SOLID)
 sampleTimeEntryBox.grid(column=1, row=2, padx=5, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
 sampleEntry.set("2")
+
+psChoice = tk.StringVar()
+psCombobox = ttk.Combobox(root, textvariable=psChoice)
+psCombobox["values"] = PS.__all__
+#psChoice.set("minute(s)")
+psCombobox.grid(column=4,row=1, padx=5, pady=5)
 
 timeUnitChoice = tk.StringVar()
 timeUnitCombobox = ttk.Combobox(root, textvariable=timeUnitChoice)

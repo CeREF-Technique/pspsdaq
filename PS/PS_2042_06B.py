@@ -2,7 +2,7 @@
     March 2017
     Class for a special type of Power supply
 """
-from . import powerSupply
+from PS import powerSupply
 import serial
 
 class PS204206B(powerSupply.PowerSupply):
