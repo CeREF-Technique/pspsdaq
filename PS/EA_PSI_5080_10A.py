@@ -5,7 +5,7 @@
 from PS import powerSupply
 import serial
 
-class PSI508010A(powerSupply.PowerSupply):
+class EA_PSI508010A(powerSupply.PowerSupply):
 
     def __init__(self, serial_name):
         self.name = "EA PSI-5080-10A"

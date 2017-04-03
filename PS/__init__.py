@@ -5,8 +5,9 @@ from PS.PSI_5080_10A import PSI508010A
 
 # dict of the powersupplies names and their corresponding class
 classDict = {
-    "PS_2042_06B":PS204206B,
-    "PSI_5080_10A":PSI508010A
+    "EA_PS_2042_06B":EA_PS204206B,
+    "EA_PSI_5080_10A":EA_PSI508010A
+    "EA_PS_8360_10T":EA_PS836010T
     }
 
 __all__ = list(classDict.keys())

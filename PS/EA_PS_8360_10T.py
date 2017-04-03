@@ -5,7 +5,7 @@
 from PS import powerSupply
 import serial
 
-class PS204206B(powerSupply.PowerSupply):
+class EA_PS836010T(powerSupply.PowerSupply):
     """ NB : The power supply must be ON before you plug the USB cable ...
     """
 
