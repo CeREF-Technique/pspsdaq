@@ -4,7 +4,6 @@ from tkinter import ttk
 import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
-#import struct
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
 from exportData import Export
@@ -13,14 +12,16 @@ import PS
 __author__ = 'Maxim Dumortier'
 
 """
- Feb. - March 2017
+ Feb. - April 2017
  CERISIC, Mons, BELGIUM
 
 The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
 At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
 """
 
-ICON_PATH = "./res/PS2DAq.ico"
+# Global vars : 
+ICON_PATH = "./res/PS2DAq.ico" # Path to the PS2Daq icon
+flagStartStop = False # Flag for the Start/Stop button
 
 #
 # FUNCTIONS :
@@ -36,15 +37,14 @@ def connect_serial_port():
         # some variables must be global (to be used in disconnection function)
         global ps # power supply
         global thread_stop
-        global thread
         
-        ps = PS.classDict[psChoice.get()](portChoice.get())
+        ps = PS.classDict[psChoice.get()](portChoice.get()) # Instantiate the choosen Power Supply 
         
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
         startStopButton.config(state="normal")
-        deviceID.set("Serial number : " + ps.getID())
+        deviceID.set("Serial number : " + ps.getID()) # Show the Device ID
         logging.info("Connected to de device " + deviceID.get())
         
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
@@ -56,7 +56,6 @@ def disconnect_serial_port():
     :return: nothing
     """
     if ps.ser:
-        #print("Disconnection from " + ps.ser.name)
         logging.info("Disconnection from " + ps.ser.name)
         thread_stop.set()  # stop reading Thread
         try:  # if the buttons are always available, put them into the initial state
@@ -92,38 +91,37 @@ def goodbye():
     logging.info("Window was closed brutally")
 
 
-flagStartStop = False # Flag for the Start/Stop button
+
 def start_mesure():
     """
     Start measuring
     """
     global flagStartStop
-    global thread
     global mesure_number
     global exp
     
-    if len(sampleEntry.get()) != 0:
+    if len(sampleEntry.get()) != 0: # First check that there's something in the textbox
         sampleEntry.set(sampleEntry.get().replace(",","."))
         
-        if isfloat(sampleEntry.get()):
+        if isfloat(sampleEntry.get()): # Second, check if the entry is a float
             sampleTime = float(sampleEntry.get())
-            #Convert the sampletime setted into seconds
+            # Convert the sampletime setted into seconds
             if timeUnitCombobox.get() == "minute(s)":
                 sampleTime *= 60
             elif timeUnitCombobox.get() == "hour(s)":
                 sampleTime *= 3600
             # Else it is seconds, so no need to convert
                 
-            if sampleTime > 0:
+            if sampleTime > 0: # Third, check that the entry is a positive time (no signification of a negative time)
                 
-                if flagStartStop:
+                if flagStartStop: # The User clicked on "STOP"
                     thread_stop.set() # Stop the read thread
                     startStopButton.config(text="Start")
                     flagStartStop = False
                     sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
                     timeUnitCombobox.config(state="normal")
                     logging.info("Stopped measurement")
-                else:
+                else: # The User clicked on "START"
                     beginTime = time.time()
                     next_call = time.time()
                     fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
@@ -131,7 +129,7 @@ def start_mesure():
                     header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
                     exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
                     
-                    if thread_stop.isSet():
+                    if thread_stop.isSet(): # Reset the stop Event
                         thread_stop.clear()
                         
                     read(sampleTime, beginTime, next_call, thread_stop) # Launch the read thread
@@ -159,13 +157,14 @@ def read(interval, beginTime, next_call, stop_event):
     Read function, reads continuously the data from serial port
     :param interval: sample time
     :param beginTime: begin time
+    :param next_call: next call time
     :param stop_event: An event to stop the thread
     :return: nothing
     """
 
     global mesure_number
     global exp
-    #global beginTime
+
     # FIRST ask for the measurements :
     if ps.ser:
         currentTime = time.time()
@@ -179,9 +178,8 @@ def read(interval, beginTime, next_call, stop_event):
         exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
         mesure_number += 1
     else:
-        # exit the main while if there is an exception (like port not open)
         logging.error("Read Broke down")
-        #break
+
 
     if not stop_event.is_set():
         next_call += interval
@@ -271,13 +269,6 @@ tk.Label(root,textvariable=deviceID).grid(column=3, row=1, padx=5, pady=5)
 #
 # Labels with stringVar, their names and their units
 #
-"""def hello():
-    print ("hello!")
-    
-menubar = tk.Menu(root)
-menubar.add_command(label="Hello!", command=hello)
-menubar.add_command(label="Quit!", command=root.exit)
-root.config(menu=menubar)"""
 
 tk.Label(root, text="Sample Time").grid(column=0, row=2, padx=5, pady=5)
 sampleEntry = tk.StringVar()
@@ -288,8 +279,7 @@ sampleEntry.set("2")
 psChoice = tk.StringVar()
 psCombobox = ttk.Combobox(root, textvariable=psChoice)
 psCombobox["values"] = PS.__all__
-#psChoice.set("minute(s)")
-psCombobox.grid(column=4,row=1, padx=5, pady=5)
+psCombobox.grid(column=4, row=1, padx=5, pady=5)
 
 timeUnitChoice = tk.StringVar()
 timeUnitCombobox = ttk.Combobox(root, textvariable=timeUnitChoice)
@@ -297,7 +287,7 @@ timeUnitCombobox["values"] = ["second(s)","minute(s)","hour(s)"]
 timeUnitChoice.set("minute(s)")
 timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 
-startStopButton = tk.Button(root, text="Start Measure", command=start_mesure, state="disabled")
+startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
 startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
 # Current sensor value
