@@ -1,4 +1,4 @@
-from threading import Thread, Event
+from threading import Timer, Event
 import tkinter as tk  # graphical interface
 from tkinter import ttk
 import serial  # install pySerial lib first in cmd : pip install pyserial
@@ -99,7 +99,8 @@ def start_mesure():
     """
     global flagStartStop
     global thread
-    global beginTime
+    global mesure_number
+    global exp
     
     if len(sampleEntry.get()) != 0:
         sampleEntry.set(sampleEntry.get().replace(",","."))
@@ -123,20 +124,24 @@ def start_mesure():
                     timeUnitCombobox.config(state="normal")
                     logging.info("Stopped measurement")
                 else:
-                    if not thread_stop.isSet():
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
-                    else:
+                    beginTime = time.time()
+                    next_call = time.time()
+                    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                    mesure_number = 1 # Initialize de measure number
+                    header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
+                    exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
+                    
+                    if thread_stop.isSet():
                         thread_stop.clear()
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
+                        
+                    read(sampleTime, beginTime, next_call, thread_stop) # Launch the read thread
                         
                     startStopButton.config(text="Stop")
                     flagStartStop = True
 
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
-                    beginTime = time.time()
+                    
                     logging.info("Started measurement with %d sec. as sample time", sampleTime)
                     
             elif sampleTime == 0:
@@ -146,41 +151,42 @@ def start_mesure():
                 sampleEntry.set("1")
         else:
             sampleEntry.set("")
+            
 
-def read(arg, stop_event):
+    
+def read(interval, beginTime, next_call, stop_event):
     """
     Read function, reads continuously the data from serial port
-    :param arg: sample time
+    :param interval: sample time
+    :param beginTime: begin time
     :param stop_event: An event to stop the thread
     :return: nothing
     """
-    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
-    #data = [[]] # Format : mesure number, localtime, time since begining (seconds), Volts, Amps, Watts
-    
-    mesure_number = 1 # Initialize de measure number
-    header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
-    exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
-    
-    while not stop_event.is_set():
 
-        # FIRST ask for the measurements :
-        if ps.ser:
-            currentTime = time.time()
-            volt,current,power = ps.getMeasures()
-            voltValue.set("%.2f" % volt)
-            currValue.set("%.2f" % current)
-            powValue.set("%.2f" % power)
-            
-            deltaTime = '%.1f' % round(currentTime-beginTime, 1)
-            #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), voltValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
-            exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
-            mesure_number += 1
-        else:
-            # exit the main while if there is an exception (like port not open)
-            logging.error("Read Broke down")
-            break
-         
-        time.sleep(arg)
+    global mesure_number
+    global exp
+    #global beginTime
+    # FIRST ask for the measurements :
+    if ps.ser:
+        currentTime = time.time()
+        volt,current,power = ps.getMeasures()
+        voltValue.set("%.2f" % volt)
+        currValue.set("%.2f" % current)
+        powValue.set("%.2f" % power)
+        
+        deltaTime = '%.1f' % round(currentTime-beginTime, 1)
+        
+        exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
+        mesure_number += 1
+    else:
+        # exit the main while if there is an exception (like port not open)
+        logging.error("Read Broke down")
+        #break
+
+    if not stop_event.is_set():
+        next_call += interval
+        Timer(next_call - time.time(),read,[interval, beginTime, next_call, stop_event]).start()
+             
 
 
 def isfloat(strin):
