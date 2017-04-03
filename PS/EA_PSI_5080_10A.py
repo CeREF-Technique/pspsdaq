@@ -7,9 +7,9 @@ import serial
 
 class EA_PSI508010A(powerSupply.PowerSupply):
 
+    name = "EA PSI-5080-10A"
+    
     def __init__(self, serial_name):
-        self.name = "EA PSI-5080-10A"
-        
         self.port = serial_name
         self.baudrate = 9600                 # Default baud rate
         self.timeout = 1                     # Default timeout, seconds

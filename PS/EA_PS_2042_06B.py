@@ -9,9 +9,9 @@ class EA_PS204206B(powerSupply.PowerSupply):
     """ NB : The power supply must be ON before you plug the USB cable ...
     """
 
+    name = "EA PS-2042-06B"
+    
     def __init__(self, serial_name):
-        self.name = "EA PS-2042-06B"
-        
         self.port = serial_name
 
         self.baudrate = 9600                 # Default baud rate

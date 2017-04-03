@@ -37,8 +37,8 @@ def connect_serial_port():
         # some variables must be global (to be used in disconnection function)
         global ps # power supply
         global thread_stop
-        
-        ps = PS.classDict[psChoice.get()](portChoice.get()) # Instantiate the choosen Power Supply 
+
+        ps = PS_name_dict[psChoice.get()](portChoice.get()) # Instantiate the choosen Power Supply 
         
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
@@ -278,7 +278,12 @@ sampleEntry.set("2")
 
 psChoice = tk.StringVar()
 psCombobox = ttk.Combobox(root, textvariable=psChoice)
-psCombobox["values"] = PS.__all__
+
+PS_name_dict = {}
+for s in PS.__all__:
+    PS_name_dict[(PS.classDict[s].name)] = PS.classDict[s]
+
+psCombobox["values"] = list(PS_name_dict.keys())
 psCombobox.grid(column=4, row=1, padx=5, pady=5)
 
 timeUnitChoice = tk.StringVar()
