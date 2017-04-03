@@ -9,6 +9,8 @@ import time
 from exportData import Export
 import logging
 import PS
+from properties import readProperties, writeProperties
+
 __author__ = 'Maxim Dumortier'
 
 """
@@ -22,6 +24,7 @@ At the end, it will write a Excell file with all the values (absolute time, rela
 # Global vars : 
 ICON_PATH = "./res/PS2DAq.ico" # Path to the PS2Daq icon
 flagStartStop = False # Flag for the Start/Stop button
+properties = {} # dict of all the properties used in this code
 
 #
 # FUNCTIONS :
@@ -207,6 +210,8 @@ def isfloat(strin):
 
 logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%(message)s', level=logging.DEBUG)
 logging.info("Application Starded")
+
+properties = readProperties()
 
 root = tk.Tk()  # create a new window
 root.geometry("800x600")  # set the size of the window
