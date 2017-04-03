@@ -14,16 +14,16 @@ class EA_PS836010T(powerSupply.PowerSupply):
     def __init__(self, serial_name):
         self.port = serial_name
 
-        self.baudrate = 9600                 # Default baud rate
+        self.baudrate = 57600                 # Default baud rate
         self.timeout = 0.1                     # Default timeout, seconds
         self.parity = serial.PARITY_ODD      # Default parity
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
         self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
         
-        self.max_voltage = 42.0 # Volts
-        self.max_current =  6.0 # Amps
-        self.max_power = 100.0 # Watts
+        self.max_voltage = 360.0 # Volts
+        self.max_current =  10.0 # Amps
+        self.max_power = 1000.0 # Watts
 
         
     def constructRequest(self, command, length, data=''):
@@ -169,8 +169,8 @@ class EA_PS836010T(powerSupply.PowerSupply):
                 
 
             DN = recieved[1]
-            if DN != 0x00:
-                print("Device node must be 0 in Serial")
+            if DN != 0x01:
+                print("Device node must be 1 in Serial")
 
                 
             OBJ = recieved[2]
@@ -287,9 +287,9 @@ class EA_PS836010T(powerSupply.PowerSupply):
         
         DATA_Bytes = self.getData(GET_VALUES_COMMAND, GET_VALUES_LENGHT)
         if DATA_Bytes != b'':
-            volt = self.getFloatValue(DATA_Bytes[2:4], self.max_voltage)
-            curr = self.getFloatValue(DATA_Bytes[4:6], self.max_current)
-            power = volt * curr
+            volt = self.getFloatValue(DATA_Bytes[0:2], self.max_voltage)
+            curr = self.getFloatValue(DATA_Bytes[2:4], self.max_current)
+            power = self.getFloatValue(DATA_Bytes[4:6], self.max_current)
         else:
             volt = -1.0
             curr = -1.0
