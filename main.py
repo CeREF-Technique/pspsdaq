@@ -1,29 +1,31 @@
-from threading import Thread, Event
+from threading import Timer, Event
 import tkinter as tk  # graphical interface
 from tkinter import ttk
 import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
-import struct
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
 from exportData import Export
 import logging
-
+import PS
 __author__ = 'Maxim Dumortier'
+
 """
- Feb. 2017
+ Feb. - April 2017
  CERISIC, Mons, BELGIUM
 
 The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
 At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
 """
 
+# Global vars : 
+ICON_PATH = "./res/PS2DAq.ico" # Path to the PS2Daq icon
+flagStartStop = False # Flag for the Start/Stop button
 
 #
 # FUNCTIONS :
 #
-
 
 def connect_serial_port():
     """
@@ -33,27 +35,28 @@ def connect_serial_port():
     if portChoice.get():
         logging.info("Connection with %s", portChoice.get())
         # some variables must be global (to be used in disconnection function)
-        global ser
+        global ps # power supply
         global thread_stop
-        global thread
-        ser = serial.Serial(portChoice.get(), timeout=1)  # serial port
-        ser.setBaudrate(9600)  # Baudrate must be the same as the Arduino One
+
+        ps = PS_name_dict[psChoice.get()](portChoice.get()) # Instantiate the choosen Power Supply 
+        
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
         startStopButton.config(state="normal")
+        deviceID.set("Serial number : " + ps.getID()) # Show the Device ID
+        logging.info("Connected to de device " + deviceID.get())
         
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
         
-
 
 def disconnect_serial_port():
     """
     Close the current serial connection
     :return: nothing
     """
-    if ser:
-        print("Disconnection from " + ser.name)
+    if ps.ser:
+        logging.info("Disconnection from " + ps.ser.name)
         thread_stop.set()  # stop reading Thread
         try:  # if the buttons are always available, put them into the initial state
             connectButton.config(state="normal")
@@ -62,7 +65,7 @@ def disconnect_serial_port():
             startStopButton.config(state="disabled")
         except:
             pass
-        ser.close()
+        ps.ser.close()
         thread_stop.clear()
         logging.info("disconnected from serial port")
 
@@ -78,8 +81,8 @@ def goodbye():
         pass
 
     try:
-        if ser:
-            ser.close()
+        if ps.ser:
+            ps.ser.close()
             # disconnectPortSerial()  # disconnect port
     except NameError:  # case of the names are not defined yet
         pass
@@ -88,51 +91,55 @@ def goodbye():
     logging.info("Window was closed brutally")
 
 
-flagStartStop = False # Flag for the Start/Stop button
+
 def start_mesure():
     """
     Start measuring
     """
     global flagStartStop
-    global thread
-    global beginTime
+    global mesure_number
+    global exp
     
-    if len(sampleEntry.get()) != 0:
+    if len(sampleEntry.get()) != 0: # First check that there's something in the textbox
         sampleEntry.set(sampleEntry.get().replace(",","."))
         
-        if isfloat(sampleEntry.get()):
+        if isfloat(sampleEntry.get()): # Second, check if the entry is a float
             sampleTime = float(sampleEntry.get())
-            #Convert the sampletime setted into seconds
+            # Convert the sampletime setted into seconds
             if timeUnitCombobox.get() == "minute(s)":
                 sampleTime *= 60
             elif timeUnitCombobox.get() == "hour(s)":
                 sampleTime *= 3600
             # Else it is seconds, so no need to convert
                 
-            if sampleTime > 0:
+            if sampleTime > 0: # Third, check that the entry is a positive time (no signification of a negative time)
                 
-                if flagStartStop:
+                if flagStartStop: # The User clicked on "STOP"
                     thread_stop.set() # Stop the read thread
                     startStopButton.config(text="Start")
                     flagStartStop = False
                     sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
                     timeUnitCombobox.config(state="normal")
                     logging.info("Stopped measurement")
-                else:
-                    if not thread_stop.isSet():
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
-                    else:
+                else: # The User clicked on "START"
+                    beginTime = time.time()
+                    next_call = time.time()
+                    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                    mesure_number = 1 # Initialize de measure number
+                    header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
+                    exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
+                    
+                    if thread_stop.isSet(): # Reset the stop Event
                         thread_stop.clear()
-                        thread = Thread(target=read, args=(sampleTime, thread_stop))
-                        thread.start()  # Launch the read thread
+                        
+                    read(sampleTime, beginTime, next_call, thread_stop) # Launch the read thread
                         
                     startStopButton.config(text="Stop")
                     flagStartStop = True
 
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
-                    beginTime = time.time()
+                    
                     logging.info("Started measurement with %d sec. as sample time", sampleTime)
                     
             elif sampleTime == 0:
@@ -142,81 +149,42 @@ def start_mesure():
                 sampleEntry.set("1")
         else:
             sampleEntry.set("")
+            
 
-def read(arg, stop_event):
+    
+def read(interval, beginTime, next_call, stop_event):
     """
     Read function, reads continuously the data from serial port
-    :param arg: sample time
+    :param interval: sample time
+    :param beginTime: begin time
+    :param next_call: next call time
     :param stop_event: An event to stop the thread
     :return: nothing
     """
-    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
-    #data = [[]] # Format : mesure number, localtime, time since begining (seconds), Volts, Amps, Watts
-    
-    mesure_number = 1 # Initialize de measure number
-    header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
-    exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
-    
-    while not stop_event.is_set():
 
-        # FIRST ask for the measurements :
-        if ser:
-            ser.write("MEAsure:ARRay?".encode())
-            logging.debug("Sended serial request")
-        try:
-            l = []  # Contains all the letters received for serial port
-            try:
-                while ser:
-                    r = ser.read(1).decode("ascii")
-                    if r != "\n":  # look after the last char
-                        l.append(r)
-                    else:
-                        break
-                word = ''.join(l)  # copy the char table into a string word
-            except UnicodeDecodeError:
-                try:
-                    while ser:
-                        r = ser.read(1).decode("utf-8")
-                        if r != "\n":  # look after the last char
-                            l.append(chr(r))
-                        else:
-                            break
-                    word = ''.join(l)  # copy the char table into a string word
-                except UnicodeDecodeError:
-                    pass
+    global mesure_number
+    global exp
 
-            # The word has such a structure :
-            # 30.99 V, 0.000 A, 0 W
-            #print("Recieved : " + word)
-            currentTime = time.time()
-            logging.debug("Recieved serial response : %s", word)
-            for w in word.split(", "):
-                if w.endswith(" V"):
-                    volpowValue.set(w.replace(" V", ""))
-                elif w.endswith(" A"):
-                    currValue.set(w.replace(" A", ""))
-                elif w.endswith(" W"):
-                    powValue.set(w.replace(" W", ""))
-                else:
-                    # This happens when we connect or disconnect to serial port
-                    logging.error("Houston, we've got a problem: unable to recognize " + w + " in received string")
-                    pass
-            deltaTime = '%.1f' % round(currentTime-beginTime, 1)
-            #data.append([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), deltaTime.replace(".",","), volpowValue.get().replace(".",","), currValue.get().replace(".",","), powValue.get().replace(".",",")])
-            exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(volpowValue.get()), float(currValue.get()), float(powValue.get())])
-            mesure_number += 1
-        except serial.SerialException:
-            # exit the main while if there is an exception (like port not open)
-            logging.error("Read Broke down")
-            break
-         
-        time.sleep(arg)
+    # FIRST ask for the measurements :
+    if ps.ser:
+        currentTime = time.time()
+        volt,current,power = ps.getMeasures()
+        voltValue.set("%.2f" % volt)
+        currValue.set("%.2f" % current)
+        powValue.set("%.2f" % power)
         
-    # Write the csv file at the end of the thread
-    """with open(fileName, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=';')
-            for line in data:
-                writer.writerow(line)"""
+        deltaTime = '%.1f' % round(currentTime-beginTime, 1)
+        
+        exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
+        mesure_number += 1
+    else:
+        logging.error("Read Broke down")
+
+
+    if not stop_event.is_set():
+        next_call += interval
+        Timer(next_call - time.time(),read,[interval, beginTime, next_call, stop_event]).start()
+             
 
 
 def isfloat(strin):
@@ -232,6 +200,7 @@ def isfloat(strin):
     except ValueError:
         return False
 
+
 #
 # MAIN routine :
 #
@@ -244,6 +213,8 @@ root.geometry("800x600")  # set the size of the window
 root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
 tk.Label(root, text="Software to read and monitor data of a power supply through USB-serial port")\
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
+root.iconbitmap(default=ICON_PATH) # set the beatiful icon on the app
+
 
 # Get the list of all the available ports in a  system (win, linux, cygwin or darwin)
 if sys.platform.startswith('win'):
@@ -256,7 +227,6 @@ elif sys.platform.startswith('darwin'):
 else:
     logging.exception(EnvironmentError('Unsupported platform'))
     raise EnvironmentError('Unsupported platform')
-
 
 
 # Test each available port to check if there is some response
@@ -291,6 +261,9 @@ portComboBox.grid(column=0,row=1, padx=5, pady=5)  # set the combobox at the rig
 
 disconnectButton = tk.Button(root, text="Disconnect...", state="disabled", command=disconnect_serial_port)
 disconnectButton.grid(column=2, row=1, padx=5, pady=5)
+deviceID = tk.StringVar()
+deviceID.set("")
+tk.Label(root,textvariable=deviceID).grid(column=3, row=1, padx=5, pady=5)
 
 
 #
@@ -303,21 +276,31 @@ sampleTimeEntryBox = tk.Entry(root, textvariable=sampleEntry, relief=tk.SOLID)
 sampleTimeEntryBox.grid(column=1, row=2, padx=5, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
 sampleEntry.set("2")
 
+psChoice = tk.StringVar()
+psCombobox = ttk.Combobox(root, textvariable=psChoice)
+
+PS_name_dict = {}
+for s in PS.__all__:
+    PS_name_dict[(PS.classDict[s].name)] = PS.classDict[s]
+
+psCombobox["values"] = list(PS_name_dict.keys())
+psCombobox.grid(column=4, row=1, padx=5, pady=5)
+
 timeUnitChoice = tk.StringVar()
 timeUnitCombobox = ttk.Combobox(root, textvariable=timeUnitChoice)
 timeUnitCombobox["values"] = ["second(s)","minute(s)","hour(s)"]
 timeUnitChoice.set("minute(s)")
 timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 
-startStopButton = tk.Button(root, text="Start Measure", command=start_mesure, state="disabled")
+startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
 startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
 # Current sensor value
 tk.Label(root, text="Voltage").grid(column=0, row=3, padx=5, pady=5)
-volpowValue = tk.StringVar()
-tk.Label(root, textvariable=volpowValue, relief=tk.SOLID).grid(column=1, row=3, padx=5, pady=5,
+voltValue = tk.StringVar()
+tk.Label(root, textvariable=voltValue, relief=tk.SOLID).grid(column=1, row=3, padx=5, pady=5,
                                                           sticky=tk.N + tk.E + tk.S + tk.W)
-volpowValue.set("###")
+voltValue.set("###")
 tk.Label(root, text="V").grid(column=2, row=3, padx=5, pady=5)
 
 # Current temperature value

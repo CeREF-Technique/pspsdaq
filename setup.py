@@ -11,13 +11,13 @@ To execute it, use the Create_exe.bat and Create_msi.bat files.
 """
 
 
-build_exe_options = {"packages": ["os"]}
+build_exe_options = {"packages": ["os", "PS"], "includes" : ["PS"], "include_files":["res"]}
 
 base = None
 if sys.platform.startswith('win'):
     base = "Win32GUI"
 
-icon = "PS2DAq.ico"  # Desktop icon
+icon = "./res/PS2DAq.ico"  # Desktop icon
 
 setup(
     name = "(PS)²DAq",
