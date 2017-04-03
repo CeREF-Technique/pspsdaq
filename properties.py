@@ -16,6 +16,13 @@ import logging
 
 PROPERTIES_PATH = "./res/ps2daq.properties" # Path to the file
 
+# default properties, minimum required
+# Must be set to a good (existing) value
+defaultProps = {"default.powerSupply":"EA PS-2042-06B",
+                "default.timeUnit":"second(s)",
+                "default.timeValue":2,
+                "default.windowSize":"800x600"
+                }
 
 def is_int(s):
     """
@@ -69,6 +76,11 @@ def readProperties():
                 else:
                     logging.error("Unable to parse the property : " + ''.join(prop))
                 pass
+
+
+    for defaultKey in list(defaultProps.keys()): # check if all the default props are in the dict, else, add them
+        if not defaultKey in dict2Read:
+            dict2Read[defaultKey] = defaultProps[defaultKey]
             
     return dict2Read
 

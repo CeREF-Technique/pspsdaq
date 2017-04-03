@@ -211,10 +211,10 @@ def isfloat(strin):
 logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%(message)s', level=logging.DEBUG)
 logging.info("Application Starded")
 
-properties = readProperties()
+properties = readProperties() # store the properties from the file
 
 root = tk.Tk()  # create a new window
-root.geometry("800x600")  # set the size of the window
+root.geometry(properties["default.windowSize"])  # set the size of the window
 root.title("Python Serial Power Supply Data Acquisition - (PS)²DAq")  # set a title to the window
 tk.Label(root, text="Software to read and monitor data of a power supply through USB-serial port")\
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
@@ -279,7 +279,7 @@ tk.Label(root, text="Sample Time").grid(column=0, row=2, padx=5, pady=5)
 sampleEntry = tk.StringVar()
 sampleTimeEntryBox = tk.Entry(root, textvariable=sampleEntry, relief=tk.SOLID)
 sampleTimeEntryBox.grid(column=1, row=2, padx=5, pady=5, sticky=tk.N + tk.E + tk.S + tk.W)
-sampleEntry.set("2")
+sampleEntry.set(properties["default.timeValue"])
 
 psChoice = tk.StringVar()
 psCombobox = ttk.Combobox(root, textvariable=psChoice)
@@ -289,12 +289,13 @@ for s in PS.__all__:
     PS_name_dict[(PS.classDict[s].name)] = PS.classDict[s]
 
 psCombobox["values"] = list(PS_name_dict.keys())
+psChoice.set(properties["default.powerSupply"])
 psCombobox.grid(column=4, row=1, padx=5, pady=5)
 
 timeUnitChoice = tk.StringVar()
 timeUnitCombobox = ttk.Combobox(root, textvariable=timeUnitChoice)
 timeUnitCombobox["values"] = ["second(s)","minute(s)","hour(s)"]
-timeUnitChoice.set("minute(s)")
+timeUnitChoice.set(properties["default.timeUnit"])
 timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 
 startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
