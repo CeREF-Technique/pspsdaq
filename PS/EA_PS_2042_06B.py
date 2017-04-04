@@ -16,7 +16,7 @@ class EA_PS204206B(powerSupply.PowerSupply):
         self.port = serial_name
 
         self.baudrate = 9600                 # Default baud rate
-        self.timeout = 0.1                     # Default timeout, seconds
+        self.timeout = 0.1                   # Default timeout, seconds
         self.parity = serial.PARITY_ODD      # Default parity
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
@@ -28,9 +28,9 @@ class EA_PS204206B(powerSupply.PowerSupply):
         
         # Available measures for this Device
         # for each, must have label and units
-        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage(), "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent(), "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower(),   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,   "stringVar":StringVar(), "used":True, "format":"%.2f"}
                                  }
 
         

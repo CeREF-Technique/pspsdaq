@@ -21,6 +21,12 @@ class EA_PSI508010A(powerSupply.PowerSupply):
         self.max_voltage = 80.0 # Volts
         self.max_current =  10.0 # Amps
         self.max_power = 320.0 # Watts
+        # Available measures for this Device
+        # for each, must have label and units
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+                                 }
 
 
     def getData(self, command):
@@ -34,7 +40,7 @@ class EA_PSI508010A(powerSupply.PowerSupply):
 
         l = []  # Contains all the letters received for serial port
         try:
-            while ser:
+            while self.ser:
                 r = self.ser.read(1).decode("ascii")
                 if r != "\n":  # look after the last char
                     l.append(r)

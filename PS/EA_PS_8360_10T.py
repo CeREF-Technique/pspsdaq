@@ -24,6 +24,12 @@ class EA_PS836010T(powerSupply.PowerSupply):
         self.max_voltage = 360.0 # Volts
         self.max_current =  10.0 # Amps
         self.max_power = 1000.0 # Watts
+        # Available measures for this Device
+        # for each, must have label and units
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent, "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+                                 }
 
         
     def constructRequest(self, command, length, data=''):

@@ -119,6 +119,10 @@ def start_mesure():
     global exp
     
     if len(sampleEntry.get()) != 0: # First check that there's something in the textbox
+        # remove some text if it is shown :
+        sampleEntry.set(sampleEntry.get().replace("Too short interval : ",""))
+        sampleEntry.set(sampleEntry.get().replace(" sec",""))
+        # In case the user put a coma :
         sampleEntry.set(sampleEntry.get().replace(",","."))
         
         if isfloat(sampleEntry.get()): # Second, check if the entry is a float
@@ -189,16 +193,20 @@ def read(interval, beginTime, next_call, stop_event):
     # FIRST ask for the measurements :
     if ps.ser:
         currentTime = time.time()
-        #volt,current,power = ps.getMeasures()
-        #voltValue.set("%.2f" % volt)
-        #currValue.set("%.2f" % current)
-        #powValue.set("%.2f" % power)
         deltaTime = '%.1f' % round(currentTime-beginTime, 1)
-        toWrite = [mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime)]#, float(voltValue.get()), float(currValue.get()), float(powValue.get())]
+        toWrite = [mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime)]
         for meas in sorted(ps.availableMeasures.keys()):
             if ps.availableMeasures[meas]["used"]: # show only if it's used
-                ps.availableMeasures[meas]["stringVar"].set(ps.availableMeasures[meas]["format"] % ps.availableMeasures[meas]["method"])
-                toWrite.append(float(ps.availableMeasures[meas]["stringVar"].get()))
+                ps.availableMeasures[meas]["stringVar"].set(ps.availableMeasures[meas]["format"] % ps.availableMeasures[meas]["method"]())
+                
+                if "f" in ps.availableMeasures[meas]["format"]: # Float format
+                    toWrite.append(float(ps.availableMeasures[meas]["stringVar"].get()))
+                elif "s" in ps.availableMeasures[meas]["format"]: # string format
+                    toWrite.append(ps.availableMeasures[meas]["stringVar"].get())
+                elif "d" in ps.availableMeasures[meas]["format"]: # int format
+                    toWrite.append(int(ps.availableMeasures[meas]["stringVar"].get()))
+                else:
+                    toWrite.append(ps.availableMeasures[meas]["stringVar"].get())
         
         
         exp.writerow(toWrite)
@@ -209,9 +217,13 @@ def read(interval, beginTime, next_call, stop_event):
 
     if not stop_event.is_set():
         next_call += interval
+        if next_call - time.time() <0:
+            # this means the polling time is too short,
+            # must adjust it to a higher value
+            interval -= next_call - time.time()
+            sampleEntry.set("Too short interval : " + "%.3f" % interval + " sec")
         Timer(next_call - time.time(),read,[interval, beginTime, next_call, stop_event]).start()
              
-
 
 def isfloat(strin):
     """
@@ -343,25 +355,6 @@ timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
 startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
-
-
-"""
-# Current temperature value
-tk.Label(root, text="Current").grid(column=0, row=4, padx=5, pady=5)
-currValue = tk.StringVar()
-tk.Label(root, textvariable=currValue, relief=tk.SOLID).grid(column=1, row=4, padx=5, pady=5,
-                                                          sticky=tk.N + tk.E + tk.S + tk.W)
-currValue.set("###")
-tk.Label(root, text="A").grid(column=2, row=4, padx=5, pady=5)
-
-# Target value
-tk.Label(root, text="Power").grid(column=0, row=5, padx=5, pady=5)
-powValue = tk.StringVar()
-tk.Label(root, textvariable=powValue, relief=tk.SOLID).grid(column=1, row=5, padx=5, pady=5,
-                                                          sticky=tk.N + tk.E + tk.S + tk.W)
-powValue.set("###")
-tk.Label(root, text="W").grid(column=2, row=5, padx=5, pady=5)
-"""
 
 
 # Close thread and serial port before exit :
