@@ -6,10 +6,10 @@ import sys
 import glob
 #import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
 import time
-from exportData import Export
 import logging
 import PS
-from properties import readProperties, writeProperties
+from util.exportData import Export
+from util.properties import readProperties, writeProperties
 
 __author__ = 'Maxim Dumortier'
 
