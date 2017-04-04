@@ -220,50 +220,69 @@ tk.Label(root, text="Software to read and monitor data of a power supply through
     .grid(column=0, row=0, columnspan=4, padx=5, pady=5)  # little explanation of what the window can do
 root.iconbitmap(default=ICON_PATH) # set the beatiful icon on the app
 
+def getAvailableSerialPorts(cmBox, connBtn):
+    """
+    Function which list all the available serial ports and put them into a comboBox
+    :param cmBox: Combobox in which the values must be set
+    :param connBtn: Connection button the funtion changes his state to enabled or disabled if there are some serial ports or not
+    :return: nothing
+    """
+    # Get the list of all the available ports in a  system (win, linux, cygwin or darwin)
+    if sys.platform.startswith('win'):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this excludes your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+    else:
+        logging.exception(EnvironmentError('Unsupported platform'))
+        raise EnvironmentError('Unsupported platform')
 
-# Get the list of all the available ports in a  system (win, linux, cygwin or darwin)
-if sys.platform.startswith('win'):
-    ports = ['COM%s' % (i + 1) for i in range(256)]
-elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-    # this excludes your current terminal "/dev/tty"
-    ports = glob.glob('/dev/tty[A-Za-z]*')
-elif sys.platform.startswith('darwin'):
-    ports = glob.glob('/dev/tty.*')
-else:
-    logging.exception(EnvironmentError('Unsupported platform'))
-    raise EnvironmentError('Unsupported platform')
-
-
-# Test each available port to check if there is some response
-result = []
-for port in ports:
-    try:
-        s = serial.Serial(port)
-        s.close()
-        result.append(port)
-    except (OSError, serial.SerialException):
-        pass
-
-
+    # Test each available port to check if there is some response
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+        
+    if not result:
+        result.append("No Serial Port Available")
+        connBtn.config(state="disabled")
+        logging.info("No Serial Port Available")
+    else:
+        connBtn.config(state="normal")
+        logging.debug("Found Serialports : %s", result)
+        
+    cmBox["values"] = result  # Set the list of the serial ports
+    
+    if result:
+        cmBox.current(0)  # default select the first on of the list
+    
+    
+# Connection Button
 connectButton = tk.Button(root, text="Connect...", command=connect_serial_port)
 connectButton.grid(column=1, row=1, padx=5, pady=5)
 
 # Put the result in a comboBox to allow the  user to choice the desired one
 portChoice = tk.StringVar()
 portComboBox = ttk.Combobox(root, textvariable=portChoice)
-if not result:
-    result.append("No Serial Port Available")
-    connectButton.config(state="disabled")
-    logging.info("No Serial Port Available")
-else:
-    logging.debug("Found Serialports : %s", result)
-    
-portComboBox["values"] = result  # Set the list of the serial ports
-if result:
-    portComboBox.current(0)  # default select the first on of the list
-portComboBox.grid(column=0,row=1, padx=5, pady=5)  # set the combobox at the right place
-# Connection Button
+getAvailableSerialPorts(portComboBox, connectButton)
+portContextMenu = tk.Menu(root, tearoff=0) # create a context menu to be able to refresh the serial ports
+portContextMenu.add_command(label="Refrech Ports", command=lambda : getAvailableSerialPorts(portComboBox, connectButton))
 
+def portContextMenuPopup(event):
+    if str(portComboBox["state"]) == "normal": # show the context menu only if the combobox is in normal (no refresh when a serial port is open)
+        portContextMenu.post(event.x_root, event.y_root)
+
+# attach popup to frame
+portComboBox.bind("<Button-3>", portContextMenuPopup)
+portComboBox.grid(column=0,row=1, padx=5, pady=5)  # set the combobox at the right place
+
+# Disconnection Button
 disconnectButton = tk.Button(root, text="Disconnect...", state="disabled", command=disconnect_serial_port)
 disconnectButton.grid(column=2, row=1, padx=5, pady=5)
 deviceID = tk.StringVar()

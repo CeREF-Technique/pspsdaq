@@ -22,7 +22,7 @@ icon = "./res/PS2DAq.ico"  # Desktop icon
 setup(
     name = "(PS)²DAq",
 
-    version = "0.2b",
+    version = "0.3b",
     
     author = "Cerisic ASBL",
 
