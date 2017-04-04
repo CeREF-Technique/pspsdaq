@@ -51,6 +51,21 @@ def connect_serial_port():
         logging.info("Connected to de device " + deviceID.get())
         
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
+
+        def addMeasure(inputDict, rowNbr):
+            tk.Label(root, text=inputDict["label"]).grid(column=0, row=rowNbr, padx=5, pady=5)
+            #voltValue = tk.StringVar()
+            tk.Label(root, textvariable=inputDict["stringVar"], relief=tk.SOLID).grid(column=1, row=rowNbr, padx=5, pady=5,
+                                                                  sticky=tk.N + tk.E + tk.S + tk.W)
+            inputDict["stringVar"].set("###")
+            tk.Label(root, text=inputDict["units"]).grid(column=2, row=rowNbr, padx=5, pady=5)
+
+        startRowNbr = 3
+        rowIndex = 0
+        for meas in sorted(ps.availableMeasures.keys()):
+            if ps.availableMeasures[meas]["used"]: # show only if it's used
+                addMeasure(ps.availableMeasures[meas], startRowNbr + rowIndex)
+                rowIndex += 1
         
 
 def disconnect_serial_port():
@@ -129,7 +144,10 @@ def start_mesure():
                     next_call = time.time()
                     fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
                     mesure_number = 1 # Initialize de measure number
-                    header = ["Measure Number", "Local time", "Relative time (s)", "Voltage (V)", "Current (A)", "Power (W)"] # Header
+                    header = ["Measure Number", "Local time", "Relative time (s)"] #, "Voltage (V)", "Current (A)", "Power (W)"] # Header
+                    for meas in sorted(ps.availableMeasures.keys()):
+                        if ps.availableMeasures[meas]["used"]: # show only if it's used
+                            header.append(ps.availableMeasures[meas]["label"] + " (" + ps.availableMeasures[meas]["units"] + ")")
                     exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
                     
                     if thread_stop.isSet(): # Reset the stop Event
@@ -171,14 +189,19 @@ def read(interval, beginTime, next_call, stop_event):
     # FIRST ask for the measurements :
     if ps.ser:
         currentTime = time.time()
-        volt,current,power = ps.getMeasures()
-        voltValue.set("%.2f" % volt)
-        currValue.set("%.2f" % current)
-        powValue.set("%.2f" % power)
-        
+        #volt,current,power = ps.getMeasures()
+        #voltValue.set("%.2f" % volt)
+        #currValue.set("%.2f" % current)
+        #powValue.set("%.2f" % power)
         deltaTime = '%.1f' % round(currentTime-beginTime, 1)
+        toWrite = [mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime)]#, float(voltValue.get()), float(currValue.get()), float(powValue.get())]
+        for meas in sorted(ps.availableMeasures.keys()):
+            if ps.availableMeasures[meas]["used"]: # show only if it's used
+                ps.availableMeasures[meas]["stringVar"].set(ps.availableMeasures[meas]["format"] % ps.availableMeasures[meas]["method"])
+                toWrite.append(float(ps.availableMeasures[meas]["stringVar"].get()))
         
-        exp.writerow([mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime), float(voltValue.get()), float(currValue.get()), float(powValue.get())])
+        
+        exp.writerow(toWrite)
         mesure_number += 1
     else:
         logging.error("Read Broke down")
@@ -320,14 +343,9 @@ timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
 startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
-# Current sensor value
-tk.Label(root, text="Voltage").grid(column=0, row=3, padx=5, pady=5)
-voltValue = tk.StringVar()
-tk.Label(root, textvariable=voltValue, relief=tk.SOLID).grid(column=1, row=3, padx=5, pady=5,
-                                                          sticky=tk.N + tk.E + tk.S + tk.W)
-voltValue.set("###")
-tk.Label(root, text="V").grid(column=2, row=3, padx=5, pady=5)
 
+
+"""
 # Current temperature value
 tk.Label(root, text="Current").grid(column=0, row=4, padx=5, pady=5)
 currValue = tk.StringVar()
@@ -343,7 +361,7 @@ tk.Label(root, textvariable=powValue, relief=tk.SOLID).grid(column=1, row=5, pad
                                                           sticky=tk.N + tk.E + tk.S + tk.W)
 powValue.set("###")
 tk.Label(root, text="W").grid(column=2, row=5, padx=5, pady=5)
-
+"""
 
 
 # Close thread and serial port before exit :

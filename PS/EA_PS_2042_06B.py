@@ -3,14 +3,15 @@
     Class for a special type of Power supply
 """
 from PS import powerSupply
+from tkinter import StringVar
 import serial
 
 class EA_PS204206B(powerSupply.PowerSupply):
     """ NB : The power supply must be ON before you plug the USB cable ...
     """
-
+    # Name to display to the user
     name = "EA PS-2042-06B"
-    
+
     def __init__(self, serial_name):
         self.port = serial_name
 
@@ -24,6 +25,13 @@ class EA_PS204206B(powerSupply.PowerSupply):
         self.max_voltage = 42.0 # Volts
         self.max_current =  6.0 # Amps
         self.max_power = 100.0 # Watts
+        
+        # Available measures for this Device
+        # for each, must have label and units
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage(), "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent(), "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower(),   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+                                 }
 
         
     def constructRequest(self, command, length, data=''):
