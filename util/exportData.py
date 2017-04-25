@@ -28,31 +28,31 @@ class Type(Enum):
 
 class Export:
 
-    def __init__(self, file_path, type = "csv", header = "" ):
+    def __init__(self, file_path, file_type = "csv", header = "" ):
         # TODO : consider the case that the file path is given with the extention e.g. : myfile.csv
         # In this case, juste catch the extention and set it as type (ignore the setted type)
                 
         self.file_path = file_path + "." + type.lower()
         self.firstwrittedline = True
                 
-        if type.lower() == 'csv':
+        if file_type.lower() == 'csv':
             self.type = Type.CSV
             source = open(self.file_path,'w') # Just create the file and close it
             source.close()
                         
-        elif type.lower() == 'xlsx':
+        elif file_type.lower() == 'xlsx':
             self.type = Type.XLSX 
             wb = Workbook()# Just create the file and close it
             ws = wb.active
             ws.title = "(PS)²DAq Data"
             wb.save(self.file_path)
             
-        elif type.lower() == 'xml':
+        elif file_type.lower() == 'xml':
             self.type = Type.XML
             raise Exception("Not supported yet")
             
         else:
-            raise ValueError('Unknown type : ', type)
+            raise ValueError('Unknown type : ', file_type)
             
         
         if header != "":
@@ -73,6 +73,19 @@ class Export:
                 self.firstwrittedline = False
             ws.append(line)
             wb.save(self.file_path)
+
+
+    def availableExport():
+        """returns all the available options in order to show them into the configure menu
+           :return: A dict of the possibilities and their label
+        """
+        toreturn={}
+        toreturn["CSV"]="CSV"
+        toreturn["Excel"]="XLSX"
+        
+        return toreturn
+
+        
             
             
         

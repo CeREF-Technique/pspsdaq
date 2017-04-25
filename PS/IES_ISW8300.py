@@ -17,7 +17,6 @@ class IES_ISW8300(powerSupply.PowerSupply):
     name = "IES ISW8300 Wattmeter"
 
     def __init__(self, serial_name):
-
         self.port = serial_name
 
         self.baudrate = 9600                 # Default baud rate, also available : 1200
@@ -35,7 +34,6 @@ class IES_ISW8300(powerSupply.PowerSupply):
         self.max_current =  15.0 # Amps
         self.max_power = 1000.0 # Watts
 
-        #print(self.getID())
         # Available measures for this Device
         # for each, must have label and units
         self.availableMeasures = { "id":      {"label":"ID",         "units":"",  "method":self.getID,      "stringVar":StringVar(), "used":True, "format":"%s"},
@@ -49,7 +47,7 @@ class IES_ISW8300(powerSupply.PowerSupply):
         """ Function to send data to the device
             :param message: message to send to the device
         """
-        self.ser.write((message+"\r").encode())
+        self.ser.write((message + "\r").encode())
 
     def readLine(self):
         """Function to read data from the Serial port
@@ -81,182 +79,182 @@ class IES_ISW8300(powerSupply.PowerSupply):
 
     def getID(self): # fonction cherchant l'info d'identification du wattmetre
         """ Methode permettant d'avoir l'identite du wattmetre """
-        message="*IDN?"
+        message = "*IDN?"
         return self.getSerialData(message)
     
     def getVersion(self):
         """ Methode permettant d'avoir la version du wattmetre """
-        message="VERSION?"
+        message = "VERSION?"
         return self.getSerialData(message)
     
     def getStatus(self):
         """ Methode permettant d'avoir le statut du wattmetre """
-        message="STATUS?"
+        message = "STATUS?"
         return self.self.getSerialData(message)
     
     def getAllData(self):
         """ Methode permettant d'avoir toutes les donnes du wattmetre, les 3 volts, 3 courants, etc """
-        message="DATA?"
+        message = "DATA?"
         self.send(message)
-        line=""
-        for i in range(7):
+        line = ""
+        for i in range(7): # wattmeter send back 7 lines of values, each contains several values
             line += self.readLine() + "\n"
         return line
 
     def getValue(self):
         """ Methode permettant de recuperer les valeurs affiches sur le wattmetre"""
-        message="VAL?"
+        message = "VAL?"
         return self.getSerialData(message)
     
     def getValueAndStatus(self):
         """ Methode permettant de recuperer les valeurs affiches sur le wattmetre ainsi que son statut"""
-        message="VAS?"
+        message = "VAS?"
         return self.getSerialData(message)
 
     def setStartContinueMode(self):
         """ Permet d'activer l'envoie en continu de donnees, le wattmetre envoie les donnees des que la mesure est faite, cad tout les 400ms max"""
-        message="MA1"
+        message = "MA1"
         self.send(message)
 
     def setStopContinueMode(self):
         """ Permet d'arreter l'envoie en continu des donnees"""
-        message="MA0"
+        message = "MA0"
         self.send(message)
 
     def lock(self):
         """ Permet de verouiller la face avant du wattmetre"""
-        message="FAV0"
+        message = "FAV0"
         self.send(message)
         
     def unlock(self):
         """ Permet de verouiller la face avant du wattmetre"""
-        message="FAV1"
+        message = "FAV1"
         self.send(message)
 
     def getN(self):
         """Donne le rapport de de courant du transformateur externe entre dans le wmetre"""
-        message="N?"
+        message = "N?"
         return self.getSerialData(message)
     
     def setN(self,N):
         """ Pemet de definir le rapport N du transformateur exterieur au wattmetre"""
-        message="SET:N=%04d"%(N) # format = SET:N=xxxx
+        message = "SET:N=%04d"%(N) # format = SET:N=xxxx
         self.send(message)
         return self.getN()
 
     def setVolt(self):
         """ Affiche les differents voltages"""
-        message="VOLT"
+        message = "VOLT"
         self.send(message)
         
     def setAmp(self):
         """ Affiche les differents amperages"""
-        message="AMP"
+        message = "AMP"
         self.send(message)
         
     def setWatt(self):
         """ Affiche les differents puissances actives"""
-        message="WATT"
+        message = "WATT"
         self.send(message)
         
     def setVar(self):
         """ Affiche les differents puissances reactives"""
-        message="VAR"
+        message = "VAR"
         self.send(message)
         
     def setVa(self):
         """ Affiche les differents puissances apparentes"""
-        message="VA"
+        message = "VA"
         self.send(message)
         
     def setPF(self):
         """ Affichage du cosinus phi"""
-        message="PF"
+        message = "PF"
         self.send(message)
         
     def setCap(self):
         """ Affichage de la capacitee"""
-        message="CAP"
+        message = "CAP"
         self.send(message)
         
     def setPH1(self):
         """ Affiche les donnes de la phase 1"""
-        message="PH1"
+        message = "PH1"
         self.send(message)
         
     def setPH2(self):
         """ Affiche les donnes de la phase 2"""
-        message="PH2"
+        message = "PH2"
         self.send(message)
         
     def setPH3(self):
         """ Affiche les donnes de la phase 3"""
-        message="PH3"
+        message = "PH3"
         self.send(message)
 
     def setSigma(self):
         """ Affiche les donnes de la somme des phases"""
-        message="SIGMA"
+        message = "SIGMA"
         self.send(message)
 
     def set15V(self):
         """ Setter le range de tension a 15V"""
-        message="SET:U1"
+        message = "SET:U1"
         self.send(message)
         
     def set50V(self):
         """ Setter le range de tension a 50V"""
-        message="SET:U2"
+        message = "SET:U2"
         self.send(message)
         
     def set150V(self):
         """ Setter le range de tension a 150V"""
-        message="SET:U3"
+        message = "SET:U3"
         self.send(message)
         
     def set500V(self):
         """ Setter le range de tension a 500V"""
-        message="SET:U4"
+        message = "SET:U4"
         self.send(message)
         
     def set500mA(self):
         """ Setter le range de courant a 0,5A"""
-        message="SET:I1"
+        message = "SET:I1"
         self.send(message)
         
     def set1500mA(self):
         """ Setter le range de courant a 1,5A"""
-        message="SET:I2"
+        message = "SET:I2"
         self.send(message)
         
     def set5A(self):
         """ Setter le range de courant a 5A"""
-        message="SET:I1"
+        message = "SET:I1"
         self.send(message)
         
     def set15A(self):
         """ Setter le range de courant a 15A"""
-        message="SET:I4"
+        message = "SET:I4"
         self.send(message)
 
     def setAutoVolt(self):
         """ Setter le range de tension de maniere automatique"""
-        message="AUTO_U"
+        message = "AUTO_U"
         self.send(message)
         
     def setManuVolt(self):
         """ Setter le range de tension de maniere manuelle"""
-        message="MANU_U"
+        message = "MANU_U"
         self.send(message)
 
     def setAutoAmp(self):
         """ Setter le range de courant de maniere automatique"""
-        message="AUTO_I"
+        message = "AUTO_I"
         self.send(message)
 
     def setManuAmp(self):
         """ Setter le range de courant de maniere manuelle"""
-        message="MANU_I"
+        message = "MANU_I"
         self.send(message)
 
     def getVolt(self):
@@ -316,6 +314,6 @@ class IES_ISW8300(powerSupply.PowerSupply):
 
     def normalBeep(self):
         """ Fait sonner un beep sur le watt metre, peut etre utile en cas de releve d'autres appareils simultanement ou pour signaler la fin d'une mesure"""
-        message="BEEP"
+        message = "BEEP"
         self.send(message)
 

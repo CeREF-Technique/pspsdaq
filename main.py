@@ -25,6 +25,7 @@ At the end, it will write a Excell file with all the values (absolute time, rela
 ICON_PATH = "./res/PS2DAq.ico" # Path to the PS2Daq icon
 flagStartStop = False # Flag for the Start/Stop button
 properties = {} # dict of all the properties used in this code
+file_type="XLSX" # default file type
 
 #
 # FUNCTIONS :
@@ -152,7 +153,7 @@ def start_mesure():
                     for meas in sorted(ps.availableMeasures.keys()):
                         if ps.availableMeasures[meas]["used"]: # show only if it's used
                             header.append(ps.availableMeasures[meas]["label"] + " (" + ps.availableMeasures[meas]["units"] + ")")
-                    exp = Export(fileName, type="xlsx", header=header) #Initialize the export class (Excel and CSV)
+                    exp = Export(fileName, file_type=file_type, header=header) #Initialize the export class (Excel and CSV)
                     
                     if thread_stop.isSet(): # Reset the stop Event
                         thread_stop.clear()
@@ -247,6 +248,14 @@ logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%
 logging.info("Application Starded")
 
 properties = readProperties() # store the properties from the file
+
+
+
+
+
+
+
+
 
 root = tk.Tk()  # create a new window
 root.geometry(properties["default.windowSize"])  # set the size of the window
@@ -355,6 +364,47 @@ timeUnitCombobox.grid(column=2,row=2, padx=5, pady=5)
 startStopButton = tk.Button(root, text="Start", command=start_mesure, state="disabled")
 startStopButton.grid(column=3, row=2, padx=5, pady=5)
 
+def hello():
+    print("hello")
+menubar = tk.Menu(root)
+
+# create a pulldown menu, and add it to the menu bar
+filemenu = tk.Menu(menubar, tearoff=0)
+filemenu.add_command(label="Open", command=hello)
+filemenu.add_command(label="Save", command=hello)
+filemenu.add_separator()
+filemenu.add_command(label="Exit", command=root.quit)
+menubar.add_cascade(label="File", menu=filemenu)
+
+# create more pulldown menus
+configmenu = tk.Menu(menubar, tearoff=0)
+
+def chooseOutputType(choice): # set the file_type to the selected choice
+    file_type=choice
+    properties["default.file.type"]=choice # TODO : write the data in the file when change occures
+
+if "default.file.type" in properties.keys():
+    file_type=properties["default.file.type"]
+    
+configOutputFileMenu = tk.Menu(configmenu, tearoff=0)
+v = tk.StringVar()
+for key in sorted(Export.availableExport().keys()): # set the available possibilities into the output file type menu and select the default one
+    val = Export.availableExport()[key]
+    if file_type.lower() == val.lower():
+        v.set(key)
+    configOutputFileMenu.add_radiobutton(label=key,variable=v, command=lambda val=val: chooseOutputType(val))
+    
+configmenu.add_cascade(label="Output File Type", menu=configOutputFileMenu)
+configmenu.add_command(label="Output File Path", command=hello)
+configmenu.add_command(label="Data to Save", command=hello)
+menubar.add_cascade(label="Configure", menu=configmenu)
+
+helpmenu = tk.Menu(menubar, tearoff=0)
+helpmenu.add_command(label="About", command=hello)
+menubar.add_cascade(label="Help", menu=helpmenu)
+
+# display the menu
+root.config(menu=menubar)
 
 
 # Close thread and serial port before exit :
