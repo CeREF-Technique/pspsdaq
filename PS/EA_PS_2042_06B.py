@@ -2,6 +2,7 @@
     March 2017
     Class for a special type of Power supply
 """
+
 from PS import powerSupply
 from tkinter import StringVar
 import serial
@@ -160,7 +161,7 @@ class EA_PS204206B(powerSupply.PowerSupply):
         
         MASK_TRANSMISSION = 0xC0 # 1100 0000 look only the 2 last bits
         NEEDED_ANSWER_TRANSMISSION = 0x80 # 1000 0000 two last bits must be "10"
-        if len(recieved)>0:
+        if len(recieved) > 0:
             SD = recieved[0]
             if SD & MASK_LENGTH != NEEDED_LENGTH:
                 print("BAD length for the concerned answer")

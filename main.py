@@ -47,6 +47,7 @@ def connect_serial_port():
         connectButton.config(state="disabled")  # change the stat of the connect button to disabled
         disconnectButton.config(state="normal")  # change the stat of the disconnect button to enabled
         portComboBox.config(state="disabled")
+        psCombobox.config(state="disabled")
         startStopButton.config(state="normal")
         deviceID.set("Serial number : " + ps.getID()) # Show the Device ID
         logging.info("Connected to de device " + deviceID.get())
@@ -82,6 +83,7 @@ def disconnect_serial_port():
             disconnectButton.config(state="disabled")
             portComboBox.config(state="normal")
             startStopButton.config(state="disabled")
+            psCombobox.config(state="normal")
         except:
             pass
         ps.ser.close()
