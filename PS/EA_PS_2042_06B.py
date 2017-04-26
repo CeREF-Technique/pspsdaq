@@ -21,7 +21,10 @@ class EA_PS204206B(powerSupply.PowerSupply):
         self.parity = serial.PARITY_ODD      # Default parity
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
-        self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
+        if serial_name != "":
+            self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
+        else:
+            self.ser = 0
         
         self.max_voltage = 42.0 # Volts
         self.max_current =  6.0 # Amps

@@ -56,8 +56,13 @@ def connect_serial_port():
         thread_stop = Event()  # defines a new thread stop for every connection to serial port
 
         def addMeasure(inputDict, rowNbr):
+            """
+            Add a measure to the GUI
+            :param inputDict: dictionnary of the available measures for this PS
+            :param rowNbr: number of the row in the GUI grid
+            :return: nothing
+            """
             tk.Label(root, text=inputDict["label"]).grid(column=0, row=rowNbr, padx=5, pady=5)
-            #voltValue = tk.StringVar()
             tk.Label(root, textvariable=inputDict["stringVar"], relief=tk.SOLID).grid(column=1, row=rowNbr, padx=5, pady=5,
                                                                   sticky=tk.N + tk.E + tk.S + tk.W)
             inputDict["stringVar"].set("###")
@@ -330,6 +335,11 @@ portContextMenu = tk.Menu(root, tearoff=0) # create a context menu to be able to
 portContextMenu.add_command(label="Refrech Ports", command=lambda : getAvailableSerialPorts(portComboBox, connectButton))
 
 def portContextMenuPopup(event):
+    """
+    Function which show a contextmenu when a right click occures on the Serial port combobox, in order to refresh the port lst
+    :param event: source event
+    :return: nothing
+    """
     if str(portComboBox["state"]) == "normal": # show the context menu only if the combobox is in normal (no refresh when a serial port is open)
         portContextMenu.post(event.x_root, event.y_root)
 
@@ -356,6 +366,55 @@ sampleTimeEntryBox.grid(column=1, row=2, padx=5, pady=5, sticky=tk.N + tk.E + tk
 sampleEntry.set(properties["default.timeValue"])
 
 psChoice = tk.StringVar()
+dynamicGUIlist=[] # list of the dynamic GUI objects, used to remove them from the GUI when the user switch of PS
+def updatedCombobox(index, value, op):
+    """
+    Function called each time the user change the combobox value
+    :param index: source event
+    :param value: ?
+    :param op: ?
+    :return: nothing
+    """
+    global dynamicGUIlist
+    print("combobox updated to " + psCombobox.get())
+    try:
+        for obj in dynamicGUIlist:
+            obj.grid_forget()
+            dynamicGUIlist.remove(obj)
+        
+    except:
+        print("Error when deleting object from list")
+        
+    def addMeasure(inputDict, rowNbr):
+        """
+        Add a measure to the GUI
+        :param inputDict: dictionnary of the available measures for this PS
+        :param rowNbr: number of the row in the GUI grid
+        :return: nothing
+        """
+        l1 = tk.Label(root, text=inputDict["label"])
+        l1.grid(column=0, row=rowNbr, padx=5, pady=5)
+        l2 = tk.Label(root, textvariable=inputDict["stringVar"], relief=tk.SOLID)
+        l2.grid(column=1, row=rowNbr, padx=5, pady=5,
+                                                              sticky=tk.N + tk.E + tk.S + tk.W)
+        inputDict["stringVar"].set("###")
+        l3 = tk.Label(root, text=inputDict["units"])
+        l3.grid(column=2, row=rowNbr, padx=5, pady=5)
+        dynamicGUIlist.append(l1)
+        dynamicGUIlist.append(l2)
+        dynamicGUIlist.append(l3)
+        
+
+    startRowNbr = 3
+    rowIndex = 0
+    ps = PS_name_dict[psChoice.get()]("") # Instantiate the choosen Power Supply 
+    for meas in sorted(ps.availableMeasures.keys()):
+        if ps.availableMeasures[meas]["used"]: # show only if it's used
+            addMeasure(ps.availableMeasures[meas], startRowNbr + rowIndex)
+            rowIndex += 1
+    print(dynamicGUIlist)
+
+psChoice.trace('w', updatedCombobox)
 psCombobox = ttk.Combobox(root, textvariable=psChoice)
 
 PS_name_dict = {}
@@ -391,6 +450,11 @@ menubar.add_cascade(label="File", menu=filemenu)
 configmenu = tk.Menu(menubar, tearoff=0)
 
 def chooseOutputType(choice): # set the file_type to the selected choice
+    """
+    Put the selected choice into the file type and the properties file
+    :param choice: choice made (CSV or XLSX)
+    :return: nothing
+    """
     file_type=choice
     properties["default.file.type"]=choice # TODO : write the data in the file when change occures
     writeProperties(properties)
@@ -409,6 +473,10 @@ for key in sorted(Export.availableExport().keys()): # set the available possibil
 configDataToSave = tk.Menu(configmenu, tearoff=0)
 
 def chooseOutputFilePath():
+    """
+    Opens a file dialog in order to select a directory in which the data must be saved
+    :return: nothing
+    """
     folder = tk.filedialog.askdirectory()
     properties["default.file.location"]=folder
     writeProperties(properties)

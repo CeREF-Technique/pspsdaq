@@ -24,11 +24,13 @@ class IES_ISW8300(powerSupply.PowerSupply):
         self.parity = serial.PARITY_EVEN     # Default parity
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
-
-        self.ser = serial.Serial(self.port, self.baudrate, \
+        if serial_name != "":
+            self.ser = serial.Serial(self.port, self.baudrate, \
                                  self.bytesize, self.parity, \
                                  self.stopbits, timeout=self.timeout, \
                                  xonxoff=True) # serial port
+        else:
+            self.ser = 0
 
         self.max_voltage = 500.0 # Volts
         self.max_current =  15.0 # Amps
