@@ -32,7 +32,7 @@ class Export:
         # TODO : consider the case that the file path is given with the extention e.g. : myfile.csv
         # In this case, juste catch the extention and set it as type (ignore the setted type)
                 
-        self.file_path = file_path + "." + type.lower()
+        self.file_path = file_path + "." + file_type.lower()
         self.firstwrittedline = True
                 
         if file_type.lower() == 'csv':

@@ -93,7 +93,7 @@ def writeProperties(dictToWrite):
     with open(PROPERTIES_PATH, 'w') as propFile:
         writer = csv.writer(propFile, delimiter='=', lineterminator='\n')
         writer.writerow(["# Written on " + time.strftime("%Y/%m/%d - %H:%M:%S")])
-        for prop in list(dictToWrite.keys()):
+        for prop in sorted(list(dictToWrite.keys())):
             writer.writerow([prop, dictToWrite[prop]])
             
         

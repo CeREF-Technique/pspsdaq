@@ -139,10 +139,14 @@ def start_mesure():
                 
                 if flagStartStop: # The User clicked on "STOP"
                     thread_stop.set() # Stop the read thread
+                    
                     startStopButton.config(text="Start")
                     flagStartStop = False
+                    
                     sampleTimeEntryBox.config(state="normal") # lock the entry and time unit during measurements
                     timeUnitCombobox.config(state="normal")
+                    menubar.entryconfig("Configure", state="normal")
+                    
                     logging.info("Stopped measurement")
                 else: # The User clicked on "START"
                     beginTime = time.time()
@@ -165,6 +169,7 @@ def start_mesure():
 
                     sampleTimeEntryBox.config(state="disabled")
                     timeUnitCombobox.config(state="disabled")
+                    menubar.entryconfig("Configure",state="disabled")
                     
                     logging.info("Started measurement with %d sec. as sample time", sampleTime)
                     
@@ -248,13 +253,6 @@ logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%
 logging.info("Application Starded")
 
 properties = readProperties() # store the properties from the file
-
-
-
-
-
-
-
 
 
 root = tk.Tk()  # create a new window
@@ -382,6 +380,7 @@ configmenu = tk.Menu(menubar, tearoff=0)
 def chooseOutputType(choice): # set the file_type to the selected choice
     file_type=choice
     properties["default.file.type"]=choice # TODO : write the data in the file when change occures
+    writeProperties(properties)
 
 if "default.file.type" in properties.keys():
     file_type=properties["default.file.type"]
