@@ -10,15 +10,16 @@ import logging
 import PS
 from util.exportData import Export
 from util.properties import readProperties, writeProperties
+import os
 
 __author__ = 'Maxim Dumortier'
 
 """
- Feb. - April 2017
- CERISIC, Mons, BELGIUM
+    Feb. - May 2017
+    CERISIC, Mons, BELGIUM
 
-The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
-At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
+    The Goal of this code is to talk with a Power supply in serial mode (COM port) and to ask with polling the different kind of measures.
+    At the end, it will write a Excell file with all the values (absolute time, relative time, Voltage, current, power)
 """
 
 # Global vars : 
@@ -84,6 +85,7 @@ def disconnect_serial_port():
             portComboBox.config(state="normal")
             startStopButton.config(state="disabled")
             psCombobox.config(state="normal")
+            menubar.entryconfig("Configure",state="normal")
         except:
             pass
         ps.ser.close()
@@ -153,7 +155,16 @@ def start_mesure():
                 else: # The User clicked on "START"
                     beginTime = time.time()
                     next_call = time.time()
-                    fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                    if "default.file.location" in properties:
+                        if os.path.isdir(properties["default.file.location"]):
+                            fileName = properties["default.file.location"] + "\PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                        else:
+                            logging.warn("Directory : " + properties["default.file.location"] + " doesn't exist, so it was remove from properties file")
+                            properties.pop("default.file.location")
+                            writeProperties(properties)
+                            fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                    else:
+                        fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
                     mesure_number = 1 # Initialize de measure number
                     header = ["Measure Number", "Local time", "Relative time (s)"] #, "Voltage (V)", "Current (A)", "Power (W)"] # Header
                     for meas in sorted(ps.availableMeasures.keys()):
@@ -394,10 +405,17 @@ for key in sorted(Export.availableExport().keys()): # set the available possibil
     if file_type.lower() == val.lower():
         v.set(key)
     configOutputFileMenu.add_radiobutton(label=key,variable=v, command=lambda val=val: chooseOutputType(val))
+
+configDataToSave = tk.Menu(configmenu, tearoff=0)
+
+def chooseOutputFilePath():
+    folder = tk.filedialog.askdirectory()
+    properties["default.file.location"]=folder
+    writeProperties(properties)
     
 configmenu.add_cascade(label="Output File Type", menu=configOutputFileMenu)
-configmenu.add_command(label="Output File Path", command=hello)
-configmenu.add_command(label="Data to Save", command=hello)
+configmenu.add_command(label="Output File Path", command=chooseOutputFilePath)
+configmenu.add_cascade(label="Data to Save", menu=configDataToSave, state="disable")
 menubar.add_cascade(label="Configure", menu=configmenu)
 
 helpmenu = tk.Menu(menubar, tearoff=0)
