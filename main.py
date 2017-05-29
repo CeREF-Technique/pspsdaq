@@ -26,7 +26,7 @@ __author__ = 'Maxim Dumortier'
 ICON_PATH = "./res/PS2DAq.ico" # Path to the PS2Daq icon
 flagStartStop = False # Flag for the Start/Stop button
 properties = {} # dict of all the properties used in this code
-file_type="XLSX" # default file type
+file_type = "XLSX" # default file type
 
 #
 # FUNCTIONS :
@@ -126,6 +126,7 @@ def start_mesure():
     """
     global flagStartStop
     global mesure_number
+    global file_type
     global exp
     
     if len(sampleEntry.get()) != 0: # First check that there's something in the textbox
@@ -412,7 +413,7 @@ def updatedCombobox(index, value, op):
         if ps.availableMeasures[meas]["used"]: # show only if it's used
             addMeasure(ps.availableMeasures[meas], startRowNbr + rowIndex)
             rowIndex += 1
-    print(dynamicGUIlist)
+    #print(dynamicGUIlist)
 
 psChoice.trace('w', updatedCombobox)
 psCombobox = ttk.Combobox(root, textvariable=psChoice)
@@ -455,12 +456,13 @@ def chooseOutputType(choice): # set the file_type to the selected choice
     :param choice: choice made (CSV or XLSX)
     :return: nothing
     """
-    file_type=choice
-    properties["default.file.type"]=choice # TODO : write the data in the file when change occures
+    global file_type
+    file_type = choice
+    properties["default.file.type"] = choice
     writeProperties(properties)
 
 if "default.file.type" in properties.keys():
-    file_type=properties["default.file.type"]
+    file_type = properties["default.file.type"]
     
 configOutputFileMenu = tk.Menu(configmenu, tearoff=0)
 v = tk.StringVar()
