@@ -6,6 +6,7 @@ from PS import powerSupply
 import serial
 from tkinter import StringVar
 
+
 class EA_PS836010T(powerSupply.PowerSupply):
     """ NB : The power supply must be ON before you plug the USB cable ...
     """
@@ -21,7 +22,8 @@ class EA_PS836010T(powerSupply.PowerSupply):
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
         if serial_name != "":
-            self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
+            self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits,
+                                     timeout=self.timeout) # serial port
         else:
             self.ser = 0
             
@@ -30,12 +32,14 @@ class EA_PS836010T(powerSupply.PowerSupply):
         self.max_power = 1000.0 # Watts
         # Available measures for this Device
         # for each, must have label and units
-        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage, "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent, "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"}
                                  }
 
-        
     def constructRequest(self, command, length, data=''):
         """
            The request has to be constructed by a certain way, this method is used for this.
@@ -78,7 +82,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
         toreturn += bytes([CS >> 8])
         toreturn += bytes([CS & 0xFF])
         return toreturn
-
 
     def constructRequestWithData(self, command, length, data):
         """
@@ -123,7 +126,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
         toreturn += bytes([CS & 0xFF])  
         return toreturn
 
-    
     def deconstructAnswer(self, recieved, command, length):
         """
            The request has to be constructed by a certain way, this method is used for this.
@@ -206,7 +208,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
             print("Nothing to read")
             DATA = b''
         return DATA
-
     
     def getFloatValue(self, DATA, max_value):
         """ Convert the byte values to foat value
@@ -220,7 +221,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
             numData += DATA[-i-1] << 8*i
             
         return numData * max_value / 25600
-
 
     def getData(self, command, length, endByte = b''):
         """ Get the asked data from the power supply through the Serial port
@@ -247,7 +247,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
             print(e)
         return self.deconstructAnswer(l, command, length)
 
-
     def setData(self, command, length, value, endByte = b''):
         """ Get the asked data from the power supply through the Serial port
             Input : command = number of the object to be get
@@ -273,20 +272,17 @@ class EA_PS836010T(powerSupply.PowerSupply):
         """
         return self.getMeasures()[0]
 
-
     def getCurrent(self):
         """ Get the current of the power supply
             return : float, in Amps
         """
         return self.getMeasures()[1]
 
-
     def getPower(self):
         """ Get the power of the power supply
             return : float, in Watts
         """
         return self.getMeasures()[2]
-
 
     def getMeasures(self):
         """ Get the Measures of the current power supplies
@@ -306,7 +302,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
             power = -1.0
         return volt, curr, power
 
-
     def setRemoteControlOn(self, switch):
         """ Set the Remote Control of power supplies
             Enable the ability to set other values
@@ -317,7 +312,6 @@ class EA_PS836010T(powerSupply.PowerSupply):
         else:
             self.setData(0x36, 2, [0x10, 0x00])
 
-            
     def setPowerSupplyOn(self, switch):
         """ Set the output of power supplie On or Off
             Input : Boolean value, True to set ON, False to set OFF
@@ -326,15 +320,13 @@ class EA_PS836010T(powerSupply.PowerSupply):
             self.setData(0x36, 2, [0x01, 0x01])
         else:
             self.setData(0x36, 2, [0x01, 0x00])
-        
 
     def setVoltage(self, volts):
         """ Set the output voltage to power supply
             Input : float volts, value to be set
         """ 
         val = round(volts / self.max_voltage * 25600)
-        self.setData(0x32, 2, [val>>8, val & 0xFF]) #set voltage % of Unom*256 ==> 10v/42v * 25600 = 6095
-
+        self.setData(0x32, 2, [val>>8, val & 0xFF])  # set voltage % of Unom*256 ==> 10v/42v * 25600 = 6095
 
     def setCurrent(self, amps):
         """ Set the output current to power supply

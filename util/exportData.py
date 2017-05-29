@@ -68,7 +68,8 @@ class Export:
         elif self.type == Type.XLSX:
             wb = load_workbook(self.file_path)
             ws = wb.active
-            if self.firstwrittedline: # Use this little stuff in order to begin the append at the first line and not the second ...
+            if self.firstwrittedline:
+                # Use this little stuff in order to begin the append at the first line and not the second ...
                 ws._current_row = 0
                 self.firstwrittedline = False
             ws.append(line)

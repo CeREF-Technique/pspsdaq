@@ -63,8 +63,9 @@ def connect_serial_port():
             :return: nothing
             """
             tk.Label(root, text=inputDict["label"]).grid(column=0, row=rowNbr, padx=5, pady=5)
-            tk.Label(root, textvariable=inputDict["stringVar"], relief=tk.SOLID).grid(column=1, row=rowNbr, padx=5, pady=5,
-                                                                  sticky=tk.N + tk.E + tk.S + tk.W)
+            tk.Label(root, textvariable=inputDict["stringVar"], relief=tk.SOLID).grid(column=1, row=rowNbr, padx=5,
+                                                                                      pady=5,
+                                                                                      sticky=tk.N + tk.E + tk.S + tk.W)
             inputDict["stringVar"].set("###")
             tk.Label(root, text=inputDict["units"]).grid(column=2, row=rowNbr, padx=5, pady=5)
 
@@ -163,20 +164,24 @@ def start_mesure():
                     next_call = time.time()
                     if "default.file.location" in properties:
                         if os.path.isdir(properties["default.file.location"]):
-                            fileName = properties["default.file.location"] + "\PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
+                            fileName = properties["default.file.location"] + "\PowerSupplyData-" \
+                                       + time.strftime("%Y%m%d-%H%M%S")
                         else:
-                            logging.warn("Directory : " + properties["default.file.location"] + " doesn't exist, so it was remove from properties file")
+                            logging.warning("Directory : " + properties["default.file.location"]
+                                            + " doesn't exist, so it was remove from properties file")
                             properties.pop("default.file.location")
                             writeProperties(properties)
                             fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
                     else:
                         fileName = "PowerSupplyData-" + time.strftime("%Y%m%d-%H%M%S")
                     mesure_number = 1 # Initialize de measure number
-                    header = ["Measure Number", "Local time", "Relative time (s)"] #, "Voltage (V)", "Current (A)", "Power (W)"] # Header
+                    header = ["Measure Number", "Local time", "Relative time (s)"]
                     for meas in sorted(ps.availableMeasures.keys()):
                         if ps.availableMeasures[meas]["used"]: # show only if it's used
-                            header.append(ps.availableMeasures[meas]["label"] + " (" + ps.availableMeasures[meas]["units"] + ")")
-                    exp = Export(fileName, file_type=file_type, header=header) #Initialize the export class (Excel and CSV)
+                            header.append(ps.availableMeasures[meas]["label"] + " ("
+                                          + ps.availableMeasures[meas]["units"] + ")")
+                    # Initialize the export class (Excel and CSV)
+                    exp = Export(fileName, file_type=file_type, header=header)
                     
                     if thread_stop.isSet(): # Reset the stop Event
                         thread_stop.clear()
@@ -199,7 +204,6 @@ def start_mesure():
                 sampleEntry.set("1")
         else:
             sampleEntry.set("")
-            
 
     
 def read(interval, beginTime, next_call, stop_event):
@@ -222,7 +226,8 @@ def read(interval, beginTime, next_call, stop_event):
         toWrite = [mesure_number, time.strftime("%Y/%m/%d-%H:%M:%S"), float(deltaTime)]
         for meas in sorted(ps.availableMeasures.keys()):
             if ps.availableMeasures[meas]["used"]: # show only if it's used
-                ps.availableMeasures[meas]["stringVar"].set(ps.availableMeasures[meas]["format"] % ps.availableMeasures[meas]["method"]())
+                ps.availableMeasures[meas]["stringVar"].set(ps.availableMeasures[meas]["format"]
+                                                            % ps.availableMeasures[meas]["method"]())
                 
                 if "f" in ps.availableMeasures[meas]["format"]: # Float format
                     toWrite.append(float(ps.availableMeasures[meas]["stringVar"].get()))
@@ -341,7 +346,8 @@ def portContextMenuPopup(event):
     :param event: source event
     :return: nothing
     """
-    if str(portComboBox["state"]) == "normal": # show the context menu only if the combobox is in normal (no refresh when a serial port is open)
+    if str(portComboBox["state"]) == "normal":
+        # show the context menu only if the combobox is in normal (no refresh when a serial port is open)
         portContextMenu.post(event.x_root, event.y_root)
 
 # attach popup to frame
@@ -377,7 +383,7 @@ def updatedCombobox(index, value, op):
     :return: nothing
     """
     global dynamicGUIlist
-    print("combobox updated to " + psCombobox.get())
+    #print("combobox updated to " + psCombobox.get())
     try:
         for obj in dynamicGUIlist:
             obj.grid_forget()
@@ -466,13 +472,15 @@ if "default.file.type" in properties.keys():
     
 configOutputFileMenu = tk.Menu(configmenu, tearoff=0)
 v = tk.StringVar()
-for key in sorted(Export.availableExport().keys()): # set the available possibilities into the output file type menu and select the default one
+for key in sorted(Export.availableExport().keys()):
+    # set the available possibilities into the output file type menu and select the default one
     val = Export.availableExport()[key]
     if file_type.lower() == val.lower():
         v.set(key)
     configOutputFileMenu.add_radiobutton(label=key,variable=v, command=lambda val=val: chooseOutputType(val))
 
 configDataToSave = tk.Menu(configmenu, tearoff=0)
+
 
 def chooseOutputFilePath():
     """

@@ -7,7 +7,8 @@
 from PS import powerSupply
 from tkinter import StringVar
 import serial          
-    
+
+
 class IES_ISW8300(powerSupply.PowerSupply):
     """ Classe definissant le comportement de la connection serie avec le wmetre
         A l'initialisation, il est necessaire de donner le numero du port COM
@@ -38,12 +39,15 @@ class IES_ISW8300(powerSupply.PowerSupply):
 
         # Available measures for this Device
         # for each, must have label and units
-        self.availableMeasures = { "id":      {"label":"ID",         "units":"",  "method":self.getID,      "stringVar":StringVar(), "used":True, "format":"%s"},
-                                   "version": {"label":"Version",    "units":"",  "method":self.getVersion, "stringVar":StringVar(), "used":True, "format":"%s"},
-                                   "allData": {"label":"All Data",   "units":"",  "method":self.getAllData, "stringVar":StringVar(), "used":True, "format":"%s"},
-                                   "value":   {"label":"Value",      "units":"",  "method":self.getValue,   "stringVar":StringVar(), "used":True, "format":"%s"}
+        self.availableMeasures = { "id":      {"label":"ID",         "units":"",  "method":self.getID,
+                                               "stringVar":StringVar(), "used":True, "format":"%s"},
+                                   "version": {"label":"Version",    "units":"",  "method":self.getVersion,
+                                               "stringVar":StringVar(), "used":True, "format":"%s"},
+                                   "allData": {"label":"All Data",   "units":"",  "method":self.getAllData,
+                                               "stringVar":StringVar(), "used":True, "format":"%s"},
+                                   "value":   {"label":"Value",      "units":"",  "method":self.getValue,
+                                               "stringVar":StringVar(), "used":True, "format":"%s"}
                                  }
-
     
     def send(self, message):
         """ Function to send data to the device
@@ -77,7 +81,6 @@ class IES_ISW8300(powerSupply.PowerSupply):
         """
         self.send(command)
         return self.readLine()
-        
 
     def getID(self): # fonction cherchant l'info d'identification du wattmetre
         """ Methode permettant d'avoir l'identite du wattmetre """
@@ -315,7 +318,8 @@ class IES_ISW8300(powerSupply.PowerSupply):
         return self.getValue()
 
     def normalBeep(self):
-        """ Fait sonner un beep sur le watt metre, peut etre utile en cas de releve d'autres appareils simultanement ou pour signaler la fin d'une mesure"""
+        """ Fait sonner un beep sur le watt metre, peut etre utile en cas de releve d'autres appareils simultanement
+        ou pour signaler la fin d'une mesure"""
         message = "BEEP"
         self.send(message)
 

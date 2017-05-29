@@ -77,7 +77,6 @@ def readProperties():
                     logging.error("Unable to parse the property : " + ''.join(prop))
                 pass
 
-
     for defaultKey in list(defaultProps.keys()): # check if all the default props are in the dict, else, add them
         if not defaultKey in dict2Read:
             dict2Read[defaultKey] = defaultProps[defaultKey]

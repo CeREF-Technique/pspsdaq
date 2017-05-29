@@ -6,6 +6,7 @@ from PS import powerSupply
 import serial
 from tkinter import StringVar
 
+
 class EA_PSI508010A(powerSupply.PowerSupply):
 
     name = "EA PSI-5080-10A"
@@ -18,7 +19,8 @@ class EA_PSI508010A(powerSupply.PowerSupply):
         self.stopbits = serial.STOPBITS_ONE  # Default stop bits
         self.bytesize = serial.EIGHTBITS
         if serial_name != "":
-            self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits, timeout=self.timeout) # serial port
+            self.ser = serial.Serial(self.port, self.baudrate, self.bytesize, self.parity, self.stopbits,
+                                     timeout=self.timeout) # serial port
         else:
             self.ser = 0
             
@@ -27,11 +29,13 @@ class EA_PSI508010A(powerSupply.PowerSupply):
         self.max_power = 320.0 # Watts
         # Available measures for this Device
         # for each, must have label and units
-        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage, "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent, "stringVar":StringVar(), "used":True, "format":"%.2f"},
-                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,   "stringVar":StringVar(), "used":True, "format":"%.2f"}
+        self.availableMeasures = { "voltage":{"label":"Voltage", "units":"V", "method":self.getVoltage,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "current":{"label":"Current", "units":"A", "method":self.getCurrent,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"},
+                                   "power":  {"label":"Power",   "units":"W", "method":self.getPower,
+                                              "stringVar":StringVar(), "used":True, "format":"%.2f"}
                                  }
-
 
     def getData(self, command):
         """ Get the asked data from the power supply through the Serial port
@@ -57,7 +61,6 @@ class EA_PSI508010A(powerSupply.PowerSupply):
         
         return float(word)
 
-    
     def setData(self, command):
         """ Get the asked data from the power supply through the Serial port
             Input : command = number of the object to be get
@@ -122,7 +125,6 @@ class EA_PSI508010A(powerSupply.PowerSupply):
         """ 
         SET_VOLTAGE_COMMAND = "".encode()
         self.writeData(SET_VOLTAGE_COMMAND)
-
 
     def setCurrent(self, amps):
         """ Set the output current to power supply
