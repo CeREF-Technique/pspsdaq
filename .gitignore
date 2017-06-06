@@ -19,5 +19,10 @@ develop-eggs/
 icons/
 *.xlsx
 *.csv
-.idea/
 test.py
+.idea/dictionaries/
+.idea/misc.xml
+.idea/modules.xml
+.idea/pspsdaq.iml
+.idea/vcs.xml
+.idea/workspace.xml
