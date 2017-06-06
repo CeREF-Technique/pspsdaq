@@ -19,5 +19,5 @@ develop-eggs/
 icons/
 *.xlsx
 *.csv
-.idea/workspace.xml
+.idea/
 test.py
