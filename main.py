@@ -274,6 +274,14 @@ def isfloat(strin):
 logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%(message)s', level=logging.DEBUG)
 logging.info("Application Started")
 
+
+def log_uncaught_exceptions(ex_cls, ex, tb):
+
+    logging.critical(''.join(tb))
+    logging.critical('{0}: {1}'.format(ex_cls, ex))
+
+sys.excepthook = log_uncaught_exceptions
+
 properties = readProperties()  # store the properties from the file
 
 
