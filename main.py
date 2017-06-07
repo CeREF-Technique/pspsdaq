@@ -4,7 +4,11 @@ from tkinter import ttk
 import serial  # install pySerial lib first in cmd : pip install pyserial
 import sys
 import glob
-#import matplotlib.pyplot as plt # install pySerial lib first in cmd : pip install matplotlib
+import matplotlib # install matplotlib lib first in cmd : pip install matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
+import numpy
 import time
 import logging
 import PS
@@ -27,7 +31,7 @@ ICON_PATH = "./res/PS2DAq.ico"  # Path to the PS2Daq icon
 flagStartStop = False  # Flag for the Start/Stop button
 properties = {}  # dict of all the properties used in this code
 file_type = "XLSX"  # default file type
-
+matplotlib.use('TkAgg')
 #
 # FUNCTIONS :
 #
@@ -239,6 +243,17 @@ def read(interval, beginTime, next_call, stop_event):
                     toWrite.append(ps.availableMeasures[meas]["stringVar"].get())
 
         exp.writerow(toWrite)
+        global t, s, f, plotted, a
+        t = numpy.append(t, toWrite[2])
+        s = numpy.append(s, toWrite[5])
+        plotted.set_ydata(s)
+        plotted.set_xdata(t)
+        delta_t_adjust = (max(t) - min(t)) * 0.05  # 5% of delta t
+        delta_s_adjust = (max(s) - min(s)) * 0.05  # 5% of delta s
+        a.set_xlim(min(t) - delta_t_adjust, max(t) + delta_t_adjust)
+        a.set_ylim(min(s) - delta_s_adjust, max(s) + delta_s_adjust)
+        f.canvas.draw()
+
         mesure_number += 1
     else:
         logging.error("Read Broke down")
@@ -275,12 +290,12 @@ logging.basicConfig(filename='PS2DAq.log', format='%(levelname)s\t%(asctime)s\t%
 logging.info("Application Started")
 
 
-def log_uncaught_exceptions(ex_cls, ex, tb):
+"""def log_uncaught_exceptions(ex_cls, ex, tb):
 
-    logging.critical(''.join(tb))
+    logging.critical(tb)
     logging.critical('{0}: {1}'.format(ex_cls, ex))
 
-sys.excepthook = log_uncaught_exceptions
+sys.excepthook = log_uncaught_exceptions"""
 
 properties = readProperties()  # store the properties from the file
 
@@ -514,7 +529,24 @@ menubar.add_cascade(label="Help", menu=helpmenu)
 # display the menu
 root.config(menu=menubar)
 
+# PLOT
+f = Figure(figsize=(5, 4), dpi=100)
+a = f.add_subplot(111)
+a.set_title("My Plot Title")
+a.set_xlabel("This is the X Axis")
+a.set_ylabel("This is the Y Axis")
+t = numpy.array([0])
+s = numpy.array([0])
+plotted, = a.plot(t, s)
 
+canvas = FigureCanvasTkAgg(f, master=root)
+canvas.show()
+canvas.get_tk_widget().grid(column=6, row=2, padx=5, pady=5)#.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+"""
+toolbar = NavigationToolbar2TkAgg(canvas, root)
+toolbar.update()
+canvas._tkcanvas.grid(column=6, row=3, padx=5, pady=5)#pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+"""
 # Close thread and serial port before exit :
 root.protocol("WM_DELETE_WINDOW", goodbye)
 
